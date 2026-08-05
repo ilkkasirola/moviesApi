@@ -1,4 +1,4 @@
-module gitea.kood.tech/juhojauhiainen/movies-api
+module movies-api
 
 go 1.25.0
 

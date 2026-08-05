@@ -3,27 +3,43 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
+	"movies-api/database"
 
 	_ "github.com/glebarez/go-sqlite"
 )
 
 func main() {
-	// connect to the SQLite database
-	db, err := sql.Open("sqlite", "./movies.db")
-	if err != nil {
-		fmt.Println(err)
-		return
+	if err := database.InitDB("./movies.db"); err != nil {
+		log.Fatal("Failed to  initialize database:", err)
 	}
+	defer database.CloseDB()
 
-	defer db.Close()
-	fmt.Println("Connected to the SQLite database successfully.")
-
-	// get the version of SQLite
 	var sqliteVersion string
-	err = db.QueryRow("select sqlite_version()").Scan(&sqliteVersion)
+	err := database.DB.QueryRow("select sqlite_version()").Scan(&sqliteVersion)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error getting SQLite version:", err)
 		return
 	}
-	fmt.Println(sqliteVersion)
+	fmt.Println("SQLite Version:", sqliteVersion)
+
+	listTables(database.DB)
+}
+
+func listTables(db *sql.DB) {
+	rows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+	if err != nil {
+		log.Fatal("Error querying tables:", err)
+	}
+	defer rows.Close()
+
+	fmt.Println("\nTables in database:")
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			log.Fatal("Error scanning table name:", err)
+		}
+		fmt.Println(" -", tableName)
+	}
 }
