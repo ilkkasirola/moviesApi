@@ -49,7 +49,27 @@ func CreateTables() error {
 		birthDate DATE
 	);
 	`
-	tables := []string{sqlGenreTable, sqlMovieTable, sqlActorTable}
+
+	sqlMovieGenre := `
+	CREATE TABLE IF NOT EXISTS MovieGenre (
+	movieId INTEGER NOT NULL,
+	genreId INTEGER NOT NULL,
+	PRIMARY KEY (movieId, GenreId),
+	FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE,
+	FOREIGN KEY (genreId) REFERENCES Actor(id) ON DELETE CASCADE
+	);
+	`
+	sqlMovieActor := `
+	CREATE TABLE IF NOT EXISTS MovieActor (
+	movieId INTEGER NOT NULL,
+	actorId INTEGER NOT NULL,
+	PRIMARY KEY (movieId, actorId),
+	FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE,
+	FOREIGN KEY (actorId) REFERENCES Actor(id) ON DELETE CASCADE
+	);
+	`
+
+	tables := []string{sqlGenreTable, sqlMovieTable, sqlActorTable, sqlMovieGenre, sqlMovieActor}
 
 	for _, table := range tables {
 		_, err := DB.Exec(table)
