@@ -42,4 +42,7 @@ func listTables(db *sql.DB) {
 		}
 		fmt.Println(" -", tableName)
 	}
+	if err := rows.Err(); err != nil {
+		log.Fatal("error during rows iteration", err)
+	}
 }
