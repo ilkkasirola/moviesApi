@@ -50,16 +50,16 @@ func CreateTables() error {
 	);
 	`
 
-	sqlMovieGenre := `
+	sqlMovieGenreJunction := `
 	CREATE TABLE IF NOT EXISTS MovieGenre (
 	movieId INTEGER NOT NULL,
 	genreId INTEGER NOT NULL,
 	PRIMARY KEY (movieId, GenreId),
 	FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE,
-	FOREIGN KEY (genreId) REFERENCES Actor(id) ON DELETE CASCADE
+	FOREIGN KEY (genreId) REFERENCES Genre(id) ON DELETE CASCADE
 	);
 	`
-	sqlMovieActor := `
+	sqlMovieActorJunction := `
 	CREATE TABLE IF NOT EXISTS MovieActor (
 	movieId INTEGER NOT NULL,
 	actorId INTEGER NOT NULL,
@@ -69,7 +69,7 @@ func CreateTables() error {
 	);
 	`
 
-	tables := []string{sqlGenreTable, sqlMovieTable, sqlActorTable, sqlMovieGenre, sqlMovieActor}
+	tables := []string{sqlGenreTable, sqlMovieTable, sqlActorTable, sqlMovieGenreJunction, sqlMovieActorJunction}
 
 	for _, table := range tables {
 		_, err := DB.Exec(table)
