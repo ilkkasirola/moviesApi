@@ -8,7 +8,8 @@ import (
 func SetupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc(" /api/movies/", handleMovies)
+	mux.HandleFunc("/api/movies", handleMovies)
+	mux.HandleFunc("/api/movies/", handleMovies)
 
 	return mux
 }
