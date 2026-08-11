@@ -14,15 +14,19 @@ func InitDB(dbPath string) error {
 	var err error
 	DB, err = sql.Open("sqlite", dbPath)
 	if err != nil {
-		log.Fatal("Failed to open database:", err)
+		log.Fatalf("Failed to open database: %v", err)
 		return err
 	}
+	_, err = DB.Exec("PRAGMA foreign_keys = on")
 
 	// defer DB.Close()
 	// log.Println("Connected to the SQLite database successfully.")
 
 	// get the version of SQLite
 	err = CreateTables()
+	if err != nil {
+
+	}
 	return nil
 }
 

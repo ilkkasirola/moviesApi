@@ -145,36 +145,86 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var movie models.Movie
-	var actor models.Actor
-	err := json.NewDecoder(r.Body).Decode(&movie)
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		http.Error(w, "DB error", 500)
+		return
+	}
+	defer tx.Rollback()
+	// var actor models.Actor
+	err = json.NewDecoder(r.Body).Decode(&movie)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	result, err := database.DB.Exec(
+	result, err := tx.Exec(
 		"INSERT INTO Movie (title, releaseYear, duration) VALUES (?, ?, ?)",
 		movie.Title, movie.ReleaseYear, movie.Duration,
 	)
 	if err != nil {
-		log.Println("Error inserting  movie", err)
+		log.Println("Error creating movie", err)
 		http.Error(w, "Error creating movie", http.StatusInternalServerError)
 		return
 	}
-	_, err = database.DB.Exec(
-		"INSERT INTO Actor (name, birthDate) VALUES (?, ?)",
-		actor.Name, actor.BirthDate,
-	)
+	movieID, err := result.LastInsertId()
 	if err != nil {
-		log.Println("Error inserting actor", err)
-		http.Error(w, "Error creating actor", http.StatusInternalServerError)
+		log.Println("Error fetching movie Id,", err)
+		http.Error(w, "Error fetching movie Id", http.StatusInternalServerError)
 		return
 	}
 
-	lastId, _ := result.LastInsertId()
-	movie.ID = int(lastId)
-	movie.Genres = []models.Genre{}
-	movie.Actors = []models.Actor{}
+	for _, actor := range movie.Actors {
+		_, err = tx.Exec(
+			"INSERT OR IGNORE INTO Actor (name, birthDate) VALUES (?, ?)",
+			actor.Name, actor.BirthDate.Time,
+		)
+		if err != nil {
+			log.Println("Error inserting actor", err)
+			http.Error(w, "Error inserting actor", http.StatusInternalServerError)
+			return
+		}
+
+		var actorID int
+		err = tx.QueryRow(
+			"SELECT id FROM Actor WHERE name = ? AND birthDate = ?",
+			actor.Name, actor.BirthDate.Time,
+		).Scan(&actorID)
+		if err != nil {
+			log.Println("Error fetching actor Id,", err)
+			http.Error(w, "Error fetching actor Id", http.StatusInternalServerError)
+			return
+		}
+
+		_, err = tx.Exec(
+			"INSERT OR IGNORE INTO MovieActor (movieId, actorId) VALUES (?, ?)",
+			movieID, actorID,
+		)
+		if err != nil {
+			log.Println("Error linking actor", err)
+			http.Error(w, "Error linking actor", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Println("Commit failed", err)
+		http.Error(w, "Commit failed", http.StatusInternalServerError)
+		return
+	}
+
+	// lastId, _ := result.LastInsertId()
+	movie.ID = int(movieID)
+	// movie.Genres = []models.Genre{}
+	// movie.Actors = []models.Actor{}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(movie)
+	err = json.NewEncoder(w).Encode(movie)
+	if err != nil {
+		log.Println("Decode Error:", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// json.NewEncoder(w).Encode(actor)
 }
