@@ -76,6 +76,13 @@ func getMovieGenres(movieID int) ([]models.Genre, error) {
 	return genres, nil
 }
 
+// func GetAllActors(w http.ResponseWriter, r *http.Request) {
+// 	query := `
+// 	SELECT id, name, birthDate FROM Actor
+// 	INNER JOIN
+// 	`
+// }
+
 func getMovieActors(movieID int) ([]models.Actor, error) {
 	query := `
 	SELECT a.id, a.name, a.birthDate FROM Actor a
@@ -138,6 +145,7 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var movie models.Movie
+	var actor models.Actor
 	err := json.NewDecoder(r.Body).Decode(&movie)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -150,6 +158,15 @@ func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error inserting  movie", err)
 		http.Error(w, "Error creating movie", http.StatusInternalServerError)
+		return
+	}
+	_, err = database.DB.Exec(
+		"INSERT INTO Actor (name, birthDate) VALUES (?, ?)",
+		actor.Name, actor.BirthDate,
+	)
+	if err != nil {
+		log.Println("Error inserting actor", err)
+		http.Error(w, "Error creating actor", http.StatusInternalServerError)
 		return
 	}
 

@@ -8,24 +8,11 @@ import (
 func SetupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/movies", handleMovies)
-	mux.HandleFunc("/api/movies/", handleMovies)
+	mux.HandleFunc("GET /api/movies", handlers.GetAllMovies)
+	mux.HandleFunc("GET /api/movies/{id}", handlers.GetMovieById)
+	mux.HandleFunc("GET /api/actors", GetAllActors)
+
+	// mux.HandleFunc("")
 
 	return mux
-}
-
-func handleMovies(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/api/movies" {
-		if r.Method == http.MethodGet {
-			handlers.GetAllMovies(w, r)
-		} else if r.Method == http.MethodPost {
-			handlers.CreateMovie(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	} else if r.Method == http.MethodGet {
-		handlers.GetMovieById(w, r)
-	} else {
-		http.Error(w, "Not found", http.StatusNotFound)
-	}
 }

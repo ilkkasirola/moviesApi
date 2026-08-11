@@ -14,7 +14,7 @@ import (
 
 func main() {
 	if err := database.InitDB("./movies.db"); err != nil {
-		log.Fatal("Failed to  initialize database:", err)
+		log.Fatal("Failed to initialize database:", err)
 	}
 	defer database.CloseDB()
 

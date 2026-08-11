@@ -29,7 +29,7 @@ func InitDB(dbPath string) error {
 func CreateTables() error {
 	sqlGenreTable := `CREATE TABLE IF NOT EXISTS Genre (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL
+		name TEXT NOT NULL UNIQUE
 	);
 	`
 
@@ -45,7 +45,7 @@ func CreateTables() error {
 	sqlActorTable := `
 	CREATE TABLE IF NOT EXISTS Actor (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
+		name TEXT NOT NULL UNIQUE,
 		birthDate DATE
 	);
 	`
