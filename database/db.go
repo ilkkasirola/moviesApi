@@ -17,7 +17,7 @@ func InitDB(dbPath string) error {
 		log.Fatalf("Failed to open database: %v", err)
 		return err
 	}
-	_, err = DB.Exec("PRAGMA foreign_keys = on")
+	// _, err = DB.Exec("PRAGMA foreign_keys = on")
 
 	// defer DB.Close()
 	// log.Println("Connected to the SQLite database successfully.")
@@ -31,39 +31,34 @@ func InitDB(dbPath string) error {
 }
 
 func CreateTables() error {
-	sqlGenreTable := `CREATE TABLE IF NOT EXISTS Genre (
+	schema := `CREATE TABLE IF NOT EXISTS Genre (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL UNIQUE
 	);
-	`
 
-	sqlMovieTable := `
 	CREATE TABLE IF NOT EXISTS Movie (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
 		releaseYear INTEGER,
-		duration INTEGER
+		duration INTEGER,
+		UNIQUE(title, releaseYear, duration)
 	);
-	`
 
-	sqlActorTable := `
 	CREATE TABLE IF NOT EXISTS Actor (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL UNIQUE,
-		birthDate DATE
+		name TEXT NOT NULL,
+		birthDate DATE,
+		UNIQUE(name, birthDate)
 	);
-	`
 
-	sqlMovieGenreJunction := `
 	CREATE TABLE IF NOT EXISTS MovieGenre (
 	movieId INTEGER NOT NULL,
 	genreId INTEGER NOT NULL,
-	PRIMARY KEY (movieId, GenreId),
+	PRIMARY KEY (movieId, genreId),
 	FOREIGN KEY (movieId) REFERENCES Movie(id) ON DELETE CASCADE,
 	FOREIGN KEY (genreId) REFERENCES Genre(id) ON DELETE CASCADE
 	);
-	`
-	sqlMovieActorJunction := `
+
 	CREATE TABLE IF NOT EXISTS MovieActor (
 	movieId INTEGER NOT NULL,
 	actorId INTEGER NOT NULL,
@@ -73,14 +68,10 @@ func CreateTables() error {
 	);
 	`
 
-	tables := []string{sqlGenreTable, sqlMovieTable, sqlActorTable, sqlMovieGenreJunction, sqlMovieActorJunction}
-
-	for _, table := range tables {
-		_, err := DB.Exec(table)
-		if err != nil {
-			log.Fatal("Failed to create table:", err)
-			return err
-		}
+	_, err := DB.Exec(schema)
+	if err != nil {
+		log.Fatal("Failed to create table:", err)
+		return err
 	}
 	log.Println("All tables created/verified successfully")
 	return nil
