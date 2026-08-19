@@ -10,9 +10,8 @@ func SetupRoutes() *http.ServeMux {
 
 	mux.HandleFunc("GET /api/movies", handlers.GetAllMovies)
 	mux.HandleFunc("GET /api/movies/{id}", handlers.GetMovieById)
-	// mux.HandleFunc("GET /api/actors", GetAllActors)
-
 	mux.HandleFunc("POST /api/movies", handlers.CreateMovie)
 
+	// mux.HandleFunc("PATCH /api/movies/{id}", handlers.PatchMovie)
 	return mux
 }

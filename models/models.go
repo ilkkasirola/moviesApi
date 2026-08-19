@@ -31,6 +31,12 @@ type Date struct {
 	time.Time
 }
 
+type UpdateMovie struct {
+	Title       *string `json:"title"`
+	ReleaseYear *int    `json:"releaseYear"`
+	Duration    *int    `json:"duration"`
+}
+
 const dateLayout = "2006-01-02"
 
 func (d *Date) UnmarshalJSON(b []byte) error {
