@@ -7,7 +7,7 @@ import (
 	"movies-api/database"
 	"movies-api/routes"
 
-	_ "github.com/glebarez/go-sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
