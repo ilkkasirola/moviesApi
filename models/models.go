@@ -7,26 +7,6 @@ import (
 	"time"
 )
 
-type Genre struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type Movie struct {
-	ID          int     `json:"id"`
-	Title       string  `json:"title"`
-	ReleaseYear int     `json:"releaseYear"`
-	Duration    int     `json:"duration"`
-	Genres      []Genre `json:"genres"`
-	Actors      []Actor `json:"actors"`
-}
-
-type Actor struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	BirthDate Date   `json:"birthDate"`
-}
-
 type Date struct {
 	time.Time
 }

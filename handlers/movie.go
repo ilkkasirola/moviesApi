@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/service"
 	"net/http"
@@ -15,33 +16,45 @@ func NewMovieHandler(s *service.MovieService) *MovieHandler {
 	return &MovieHandler{Service: s}
 }
 
-func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
+func WriteError(w http.ResponseWriter, err error) {
 	w.Header().Set("Content-Type", "application/json")
+
+	if e, ok := err.(*appErr.AppError); ok {
+		w.WriteHeader(e.Status)
+		json.NewEncoder(w).Encode(e)
+		return
+	}
+
+	w.WriteHeader(500)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": "internal server error",
+	})
+}
+
+func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
+	// w.Header().Set("Content-Type", "application/json")
 
 	var movie models.Movie
 	err := json.NewDecoder(r.Body).Decode(&movie)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	movieID, err := h.Service.CreateMovie(movie)
 	if err != nil {
-		if err == service.ErrMovieExists {
-			w.WriteHeader(http.StatusConflict)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "movie already exists",
-				"code":  "MOVIE_EXISTS",
-			})
-			return
-		}
-
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		WriteError(w, err)
 		return
 	}
 
-	movie.ID = int(movieID)
-
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(movie)
+	json.NewEncoder(w).Encode(map[string]int64{
+		"id": movieID,
+	})
 }
+
+// 	movie.ID = int(movieID)
+
+// 	w.WriteHeader(http.StatusCreated)
+// 	json.NewEncoder(w).Encode(movie)
+// }
