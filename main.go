@@ -18,7 +18,7 @@ func main() {
 
 	mux := routes.SetupRoutes()
 
-	log.Println("serer on http://localhost:8080")
+	log.Println("server on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 
 }
