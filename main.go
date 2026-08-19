@@ -25,7 +25,7 @@ func main() {
 
 	mux := routes.SetupRoutes(handler)
 
-	http.HandleFunc("api/movies", handler.CreateMovie)
+	// http.HandleFunc("api/movies", handler.CreateMovie)
 
 	log.Println("serer on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
