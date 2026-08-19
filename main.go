@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./movie.db")
+
+	db, err := sql.Open("sqlite3", "./movie.db?_foreign_keys=ON")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -20,4 +21,5 @@ func main() {
 	CreateTable(db)
 
 	fmt.Println("Tables created.")
+	RunServer(db)
 }
