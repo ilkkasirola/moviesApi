@@ -16,34 +16,19 @@ func NewMovieHandler(s *service.MovieService) *MovieHandler {
 	return &MovieHandler{Service: s}
 }
 
-func WriteError(w http.ResponseWriter, err error) {
-	w.Header().Set("Content-Type", "application/json")
-
-	if e, ok := err.(*appErr.AppError); ok {
-		w.WriteHeader(e.Status)
-		json.NewEncoder(w).Encode(e)
-		return
-	}
-
-	w.WriteHeader(500)
-	json.NewEncoder(w).Encode(map[string]string{
-		"error": "internal server error",
-	})
-}
-
 func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
 
 	var movie models.Movie
 	err := json.NewDecoder(r.Body).Decode(&movie)
 	if err != nil {
-		WriteError(w, appErr.ErrInvalidBody)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	movieID, err := h.Service.CreateMovie(movie)
 	if err != nil {
-		WriteError(w, err)
+		appErr.WriteError(w, err)
 		return
 	}
 
@@ -51,6 +36,15 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]int64{
 		"id": movieID,
 	})
+}
+
+func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
+	movies, err := h.Service.GetAllMovies()
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	json.NewEncoder(w).Encode(movies)
 }
 
 // 	movie.ID = int(movieID)

@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"encoding/json"
 	"net/http"
 )
 
@@ -33,3 +34,18 @@ var (
 		Status:  http.StatusBadRequest,
 	}
 )
+
+func WriteError(w http.ResponseWriter, err error) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if e, ok := err.(*AppError); ok {
+		w.WriteHeader(e.Status)
+		json.NewEncoder(w).Encode(e)
+		return
+	}
+
+	w.WriteHeader(500)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": "internal server error",
+	})
+}

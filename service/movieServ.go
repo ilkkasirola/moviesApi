@@ -60,3 +60,14 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 	}
 	return movieID, nil
 }
+
+func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
+	movies, err := s.Repo.GetAllMovies()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range movies {
+		actors, _ := s.Repo.GetActor
+	}
+}
