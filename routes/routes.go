@@ -12,6 +12,7 @@ func SetupRoutes(mh *handlers.MovieHandler, ah *handlers.ActorHandler) *http.Ser
 	mux.HandleFunc("GET /api/movies/{id}", mh.GetMovieByID)
 	mux.HandleFunc("POST /api/movies", mh.CreateMovie)
 
-	// mux.HandleFunc("PATCH /api/movies/{id}", handlers.PatchMovie)
+	mux.HandleFunc("GET /api/actors", ah.GetAllActors)
+	mux.HandleFunc("GET /api/actors/{id}", ah.GetActorByID)
 	return mux
 }
