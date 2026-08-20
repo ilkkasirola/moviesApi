@@ -2,8 +2,9 @@ package service
 
 import (
 	// "errors"
-
-	"movies-api/errors"
+	"database/sql"
+	stdErr "errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
 	"strings"
@@ -28,7 +29,7 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return 0, errors.ErrMovieExists
+			return 0, appErr.ErrMovieExists
 		}
 		return 0, err
 	}
@@ -62,12 +63,16 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 }
 
 func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
-	movies, err := s.Repo.GetAllMovies()
-	if err != nil {
-		return nil, err
-	}
+	return s.Repo.GetAllMovies()
+}
 
-	for i := range movies {
-		actors, _ := s.Repo.GetActor
+func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
+	movie, err := s.Repo.GetMovieByID(id)
+	if stdErr.Is(err, sql.ErrNoRows) {
+		return models.Movie{}, appErr.ErrMovieNotFound
 	}
+	if err != nil {
+		return models.Movie{}, err
+	}
+	return movie, nil
 }

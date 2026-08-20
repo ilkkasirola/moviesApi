@@ -6,6 +6,7 @@ import (
 	"movies-api/models"
 	"movies-api/service"
 	"net/http"
+	"strconv"
 )
 
 type MovieHandler struct {
@@ -45,6 +46,22 @@ func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(movies)
+}
+
+func (h *MovieHandler) GetMovieByID(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
+		appErr.WriteError(w, appErr.ErrIvalidID)
+		return
+	}
+
+	movie, err := h.Service.GetMovieByID(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(movie)
 }
 
 // 	movie.ID = int(movieID)

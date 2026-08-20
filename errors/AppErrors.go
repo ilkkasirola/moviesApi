@@ -33,6 +33,18 @@ var (
 		Message: "birthdate must be YYYY-MM-DD",
 		Status:  http.StatusBadRequest,
 	}
+
+	ErrIvalidID = &AppError{
+		Code:    "IVALID_ID",
+		Message: "movie id must be a positive integer",
+		Status:  http.StatusNotFound,
+	}
+
+	ErrMovieNotFound = &AppError{
+		Code:    "MOVIE_NOT_FOUND",
+		Message: "movie not found",
+		Status:  http.StatusNotFound,
+	}
 )
 
 func WriteError(w http.ResponseWriter, err error) {

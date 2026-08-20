@@ -21,7 +21,7 @@ func InitDB(dbPath string) error {
 	if err != nil {
 		return err
 	}
-	return CreateTables()
+	return nil
 }
 
 func CloseDB() {
