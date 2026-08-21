@@ -5,7 +5,10 @@ import (
 
 	"log"
 	"movies-api/database"
+	"movies-api/handlers"
+	"movies-api/repository"
 	"movies-api/routes"
+	"movies-api/service"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,9 +19,14 @@ func main() {
 	}
 	defer database.CloseDB()
 
-	mux := routes.SetupRoutes()
+	repo := repository.NewMovieRepository(database.DB)
+	service := service.NewMovieService(repo)
+	handler := handlers.NewMovieHandler(service)
+
+	mux := routes.SetupRoutes(handler)
+
+	// http.HandleFunc("api/movies", handler.CreateMovie)
 
 	log.Println("server on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
-
 }

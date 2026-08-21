@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func SetupRoutes() *http.ServeMux {
+func SetupRoutes(h *handlers.MovieHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/movies", handlers.GetAllMovies)
