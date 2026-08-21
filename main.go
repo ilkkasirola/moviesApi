@@ -15,15 +15,23 @@ import (
 
 func main() {
 	if err := database.InitDB("./movies.db"); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+		log.Fatal(err)
 	}
 	defer database.CloseDB()
 
-	repo := repository.NewMovieRepository(database.DB)
-	service := service.NewMovieService(repo)
-	handler := handlers.NewMovieHandler(service)
+	movieRepo := repository.NewMovieRepository(database.DB)
+	movieService := service.NewMovieService(movieRepo)
+	movieHandler := handlers.NewMovieHandler(movieService)
 
-	mux := routes.SetupRoutes(handler)
+	actorRepo := repository.NewActorRepository(database.DB)
+	actorService := service.NewActorService(actorRepo)
+	actorHandler := handlers.NewActorHandler(actorService)
+
+	genreRepo := repository.NewGenreRepository(database.DB)
+	genreService := service.NewGenreService(genreRepo)
+	genreHandler := handlers.NewGenreHandler(genreService)
+
+	mux := routes.SetupRoutes(movieHandler, actorHandler, genreHandler)
 
 	// http.HandleFunc("api/movies", handler.CreateMovie)
 

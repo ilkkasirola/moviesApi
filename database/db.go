@@ -14,20 +14,20 @@ func InitDB(dbPath string) error {
 	var err error
 	DB, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
 		return err
 	}
-	// _, err = DB.Exec("PRAGMA foreign_keys = on")
 
-	// defer DB.Close()
-	// log.Println("Connected to the SQLite database successfully.")
-
-	// get the version of SQLite
 	err = CreateTables()
 	if err != nil {
-
+		return err
 	}
 	return nil
+}
+
+func CloseDB() {
+	if DB != nil {
+		DB.Close()
+	}
 }
 
 func CreateTables() error {
@@ -70,15 +70,9 @@ func CreateTables() error {
 
 	_, err := DB.Exec(schema)
 	if err != nil {
-		log.Fatal("Failed to create table:", err)
+		log.Println("Failed to create table:", err)
 		return err
 	}
 	log.Println("All tables created/verified successfully")
-	return nil
-}
-
-func CloseDB() {
-	if DB != nil {
-		DB.Close()
-	}
+	return err
 }
