@@ -57,6 +57,12 @@ var (
 		Message: "genre already exists",
 		Status:  http.StatusBadRequest,
 	}
+
+	ErrActorExists = &AppError{
+		Code:    "ACTOR_EXISTS",
+		Message: "actor already exists",
+		Status:  http.StatusBadRequest,
+	}
 )
 
 func WriteError(w http.ResponseWriter, err error) {

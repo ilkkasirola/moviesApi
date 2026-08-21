@@ -67,3 +67,31 @@ func (r *ActorRepository) GetMoviesByActorID(actorID int) ([]models.Movie, error
 	}
 	return movies, rows.Err()
 }
+
+func (r *ActorRepository) CreateActor(name string, birthDate any) (int64, error) {
+	result, err := r.DB.Exec(
+		"INSERT OR IGNORE INTO Actor (name, birthDate) VALUES (?, ?)",
+		name, birthDate,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (r *ActorRepository) GetActorID(name string, birthDate any) (int, error) {
+	var id int
+	err := r.DB.QueryRow(
+		"SELECT id FROM Actor WHERE name = ? AND birthDate = ?",
+		name, birthDate,
+	).Scan(&id)
+	return id, err
+}
+
+func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
+	_, err := r.DB.Exec(
+		"INSERT OR IGNORE INTO MovieActor (movieID, ActorID) VALUES (?, ?)",
+		movieID, actorID,
+	)
+	return err
+}
