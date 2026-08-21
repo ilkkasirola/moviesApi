@@ -54,3 +54,11 @@ func (r *GenreRepository) CreateGenre(name string) (int64, error) {
 	}
 	return result.LastInsertId()
 }
+
+func (r *GenreRepository) DeleteGenre(id int) error {
+	_, err := r.DB.Exec(`
+		DELETE FROM Genre
+		WHERE id = ?`, id,
+	)
+	return err
+}

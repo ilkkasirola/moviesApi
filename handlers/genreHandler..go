@@ -68,3 +68,20 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 		"id": genreID,
 	})
 }
+
+func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	idStr := parts[len(parts)-1]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+	err = h.Service.DeleteGenre(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
