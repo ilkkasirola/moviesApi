@@ -44,3 +44,13 @@ func (r *GenreRepository) GetByID(id int) (models.Genre, error) {
 
 	return g, err
 }
+
+func (r *GenreRepository) CreateGenre(name string) (int64, error) {
+	result, err := r.DB.Exec(
+		"INSERT INTO Genre (name) VALUES (?)", name,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}

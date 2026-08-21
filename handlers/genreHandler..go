@@ -49,3 +49,22 @@ func (h *GenreHandler) GetGenreById(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(GenreResponse{Genre: genre})
 }
+
+func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
+	var genre models.Genre
+	err := json.NewDecoder(r.Body).Decode(&genre)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+
+	genreID, err := h.Service.CreateGenre(genre)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int64{
+		"id": genreID,
+	})
+}

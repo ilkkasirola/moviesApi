@@ -1,8 +1,10 @@
 package service
 
 import (
+	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
+	"strings"
 )
 
 type GenreService struct {
@@ -24,4 +26,18 @@ func (s *GenreService) GetGenreByID(id int) (models.Genre, error) {
 	}
 	return genre, nil
 
+}
+
+func (s *GenreService) CreateGenre(g models.Genre) (int64, error) {
+	genreID, err := s.Repo.CreateGenre(
+		g.Name,
+	)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return 0, appErr.ErrGenreExists
+		}
+	}
+
+	return genreID, nil
 }

@@ -35,7 +35,7 @@ var (
 	}
 
 	ErrIvalidID = &AppError{
-		Code:    "IVALID_ID",
+		Code:    "INVALID_ID",
 		Message: "movie id must be a positive integer",
 		Status:  http.StatusNotFound,
 	}
@@ -44,6 +44,18 @@ var (
 		Code:    "MOVIE_NOT_FOUND",
 		Message: "movie not found",
 		Status:  http.StatusNotFound,
+	}
+
+	ErrGenreNotFound = &AppError{
+		Code:    "GENRE_NOT_FOUND",
+		Message: "genre not found",
+		Status:  http.StatusNotFound,
+	}
+
+	ErrGenreExists = &AppError{
+		Code:    "GENRE_EXISTS",
+		Message: "genre already exists",
+		Status:  http.StatusBadRequest,
 	}
 )
 
