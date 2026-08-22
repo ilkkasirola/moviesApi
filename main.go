@@ -10,8 +10,12 @@ import (
 	"movies-api/routes"
 	"movies-api/service"
 
+	"github.com/go-playground/validator/v10"
+
 	_ "github.com/mattn/go-sqlite3"
 )
+
+var validate = validator.New()
 
 func main() {
 	if err := database.InitDB("./movies.db"); err != nil {
@@ -27,7 +31,7 @@ func main() {
 	actorService := service.NewActorService(actorRepo)
 	genreService := service.NewGenreService(genreRepo)
 
-	movieHandler := handlers.NewMovieHandler(movieService)
+	movieHandler := handlers.NewMovieHandler(movieService, validate)
 	actorHandler := handlers.NewActorHandler(actorService)
 	genreHandler := handlers.NewGenreHandler(genreService)
 

@@ -41,11 +41,11 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 	}
 
 	for _, actor := range m.Actors {
-		_, err = s.ARepo.CreateActor(actor.Name, actor.BirthDate.Time)
+		_, err = s.ARepo.CreateActor(actor.Name, actor.BirthDate)
 		if err != nil {
 			return 0, err
 		}
-		actorID, err := s.ARepo.GetActorID(actor.Name, actor.BirthDate.Time)
+		actorID, err := s.ARepo.GetActorID(actor.Name, actor.BirthDate)
 		if err != nil {
 			return 0, err
 		}

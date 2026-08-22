@@ -7,14 +7,20 @@ import (
 	"movies-api/service"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type MovieHandler struct {
-	Service *service.MovieService
+	Service  *service.MovieService
+	Validate *validator.Validate
 }
 
-func NewMovieHandler(s *service.MovieService) *MovieHandler {
-	return &MovieHandler{Service: s}
+func NewMovieHandler(s *service.MovieService, v *validator.Validate) *MovieHandler {
+	return &MovieHandler{
+		Service:  s,
+		Validate: v,
+	}
 }
 
 func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +30,11 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&movie)
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+	err = h.Validate.Struct(movie)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrValidation)
 		return
 	}
 

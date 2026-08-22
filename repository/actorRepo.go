@@ -26,7 +26,7 @@ func (r *ActorRepository) GetAll() ([]models.Actor, error) {
 
 	for rows.Next() {
 		var a models.Actor
-		err := rows.Scan(&a.ID, &a.Name, &a.BirthDate.Time)
+		err := rows.Scan(&a.ID, &a.Name, &a.BirthDate)
 		if err != nil {
 			return nil, err
 		}
