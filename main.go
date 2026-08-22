@@ -20,15 +20,15 @@ func main() {
 	defer database.CloseDB()
 
 	movieRepo := repository.NewMovieRepository(database.DB)
-	movieService := service.NewMovieService(movieRepo)
-	movieHandler := handlers.NewMovieHandler(movieService)
-
 	actorRepo := repository.NewActorRepository(database.DB)
-	actorService := service.NewActorService(actorRepo)
-	actorHandler := handlers.NewActorHandler(actorService)
-
 	genreRepo := repository.NewGenreRepository(database.DB)
+
+	movieService := service.NewMovieService(movieRepo, actorRepo, genreRepo)
+	actorService := service.NewActorService(actorRepo)
 	genreService := service.NewGenreService(genreRepo)
+
+	movieHandler := handlers.NewMovieHandler(movieService)
+	actorHandler := handlers.NewActorHandler(actorService)
 	genreHandler := handlers.NewGenreHandler(genreService)
 
 	mux := routes.SetupRoutes(movieHandler, actorHandler, genreHandler)

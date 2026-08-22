@@ -58,6 +58,7 @@ func (h *MovieHandler) GetMovieByID(w http.ResponseWriter, r *http.Request) {
 	movie, err := h.Service.GetMovieByID(id)
 	if err != nil {
 		appErr.WriteError(w, err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
