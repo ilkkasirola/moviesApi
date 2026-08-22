@@ -32,7 +32,7 @@ func main() {
 	genreService := service.NewGenreService(genreRepo)
 
 	movieHandler := handlers.NewMovieHandler(movieService, validate)
-	actorHandler := handlers.NewActorHandler(actorService)
+	actorHandler := handlers.NewActorHandler(actorService, validate)
 	genreHandler := handlers.NewGenreHandler(genreService)
 
 	mux := routes.SetupRoutes(movieHandler, actorHandler, genreHandler)
