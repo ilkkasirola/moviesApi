@@ -27,7 +27,7 @@ func NewMovieService(mRepo *repository.MovieRepository, aRepo *repository.ActorR
 }
 
 func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
-	movieID, err := s.MRepo.Create(
+	movieID, err := s.MRepo.CreateMovie(
 		m.Title,
 		m.ReleaseYear,
 		m.Duration,
@@ -53,8 +53,18 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
+	}
 
-		err = s.ARepo.LinkActor(movieID, actorID)
+	for _, genre := range m.Genres {
+		_, err = s.GRepo.CreateGenre(genre.Name)
+		if err != nil {
+			return 0, err
+		}
+		genreID, err := s.GRepo.GetGenreID(genre.Name)
+		if err != nil {
+			return 0, err
+		}
+		err = s.GRepo.LinkGenre(movieID, genreID)
 		if err != nil {
 			return 0, err
 		}

@@ -45,7 +45,7 @@ func (r *MovieRepository) GetMovieByID(id int) (models.Movie, error) {
 	return m, err
 }
 
-func (r *MovieRepository) Create(title string, year int, duration int) (int64, error) {
+func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int64, error) {
 	result, err := r.DB.Exec(
 		"INSERT INTO Movie (title, releaseYear, duration) VALUES (?, ?, ?)",
 		title, year, duration,
