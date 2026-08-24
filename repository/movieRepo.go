@@ -55,3 +55,8 @@ func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int
 	}
 	return result.LastInsertId()
 }
+
+func (r *MovieRepository) DeleteMovie(id int) error {
+	_, err := r.DB.Exec(`DELETE FROM movie WHERE id = ?`, id)
+	return err
+}

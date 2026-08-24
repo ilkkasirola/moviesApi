@@ -7,6 +7,7 @@ import (
 	"movies-api/service"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -74,6 +75,23 @@ func (h *MovieHandler) GetMovieByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(movie)
+}
+
+func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	idStr := parts[len(parts)-1]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	err = h.Service.MRepo.DeleteMovie(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // 	movie.ID = int(movieID)
