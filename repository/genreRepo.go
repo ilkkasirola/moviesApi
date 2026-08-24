@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	"movies-api/errors"
 	"movies-api/models"
 )
 
@@ -61,4 +63,36 @@ func (r *GenreRepository) DeleteGenre(id int) error {
 		WHERE id = ?`, id,
 	)
 	return err
+}
+
+func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (*models.Genre, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.ExecContext(ctx, "UPDATE Genre SET name = ? WHERE id = ?", name, id)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		return nil, errors.ErrGenreNotFound
+	}
+
+	var g models.Genre
+	row := tx.QueryRowContext(ctx, "SELECT id, name FROM Genre WHERE id = ?", id)
+	if err := row.Scan(&g.ID, &g.Name); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return &g, nil
 }
