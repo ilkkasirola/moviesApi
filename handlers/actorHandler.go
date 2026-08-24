@@ -79,3 +79,20 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 		"id": genreID,
 	})
 }
+
+func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	idStr := parts[len(parts)-1]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+	err = h.Service.DeleteActor(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

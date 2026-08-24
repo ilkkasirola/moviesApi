@@ -105,3 +105,11 @@ func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
 	)
 	return err
 }
+
+func (r *ActorRepository) DeleteActor(id int) error {
+	_, err := r.DB.Exec(`
+		DELETE FROM Actor
+		WHERE id = ?`, id,
+	)
+	return err
+}
