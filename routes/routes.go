@@ -19,5 +19,6 @@ func SetupRoutes(mh *handlers.MovieHandler, ah *handlers.ActorHandler, gh *handl
 
 	mux.HandleFunc("GET /api/genres/{id}", gh.GetGenreById)
 	mux.HandleFunc("POST /api/genres", gh.CreateGenre)
+	mux.HandleFunc("DELETE /api/genres/{id}", gh.DeleteGenre)
 	return mux
 }

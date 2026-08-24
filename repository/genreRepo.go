@@ -65,3 +65,11 @@ func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
 	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieID, genreID) VALUES (?, ?)", movieID, genreID)
 	return err
 }
+
+func (r *GenreRepository) DeleteGenre(id int) error {
+	_, err := r.DB.Exec(`
+		DELETE FROM Genre
+		WHERE id = ?`, id,
+	)
+	return err
+}

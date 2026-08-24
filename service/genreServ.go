@@ -41,3 +41,7 @@ func (s *GenreService) CreateGenre(g models.Genre) (int64, error) {
 
 	return genreID, nil
 }
+
+func (s *GenreService) DeleteGenre(id int) error {
+	return s.Repo.DeleteGenre(id)
+}
