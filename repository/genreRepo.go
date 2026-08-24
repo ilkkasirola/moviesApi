@@ -49,12 +49,23 @@ func (r *GenreRepository) GetByID(id int) (models.Genre, error) {
 
 func (r *GenreRepository) CreateGenre(name string) (int64, error) {
 	result, err := r.DB.Exec(
-		"INSERT INTO Genre (name) VALUES (?)", name,
+		"INSERT OR IGNORE INTO Genre (name) VALUES (?)", name,
 	)
 	if err != nil {
 		return 0, err
 	}
 	return result.LastInsertId()
+}
+
+func (r *GenreRepository) GetGenreID(name string) (int, error) {
+	var id int
+	err := r.DB.QueryRow("SELECT id FROM Genre WHERE name = ?", name).Scan(&id)
+	return id, err
+}
+
+func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
+	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieID, genreID) VALUES (?, ?)", movieID, genreID)
+	return err
 }
 
 func (r *GenreRepository) DeleteGenre(id int) error {

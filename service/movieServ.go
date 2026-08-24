@@ -13,15 +13,21 @@ import (
 // var ErrMovieExists = errors.New("movie already exists")
 
 type MovieService struct {
-	Repo *repository.MovieRepository
+	MRepo *repository.MovieRepository
+	ARepo *repository.ActorRepository
+	GRepo *repository.GenreRepository
 }
 
-func NewMovieService(r *repository.MovieRepository) *MovieService {
-	return &MovieService{Repo: r}
+func NewMovieService(mRepo *repository.MovieRepository, aRepo *repository.ActorRepository, gRepo *repository.GenreRepository) *MovieService {
+	return &MovieService{
+		MRepo: mRepo,
+		ARepo: aRepo,
+		GRepo: gRepo,
+	}
 }
 
 func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
-	movieID, err := s.Repo.Create(
+	movieID, err := s.MRepo.CreateMovie(
 		m.Title,
 		m.ReleaseYear,
 		m.Duration,
@@ -35,39 +41,44 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 	}
 
 	for _, actor := range m.Actors {
-		err = s.Repo.CreateActor(actor.Name, actor.BirthDate.Time)
+		_, err = s.ARepo.CreateActor(actor.Name, actor.BirthDate)
 		if err != nil {
 			return 0, err
 		}
-		actorID, err := s.Repo.GetActorID(actor.Name, actor.BirthDate.Time)
+		actorID, err := s.ARepo.GetActorID(actor.Name, actor.BirthDate)
 		if err != nil {
 			return 0, err
 		}
-		err = s.Repo.LinkActor(movieID, actorID)
+		err = s.ARepo.LinkActor(movieID, actorID)
 		if err != nil {
 			return 0, err
 		}
-
-		// 	actorID, err := s.Repo.GetActorID(actor.Name, actor.BirthDate.Time)
-		// 	if err != nil {
-		// 		return 0, err
-		// 	}
-
-		// 	err = s.Repo.LinkActor(movieID, actorID)
-		// 	if err != nil {
-		// 		return 0, err
-		// 	}
-		// }
 	}
+
+	for _, genre := range m.Genres {
+		_, err = s.GRepo.CreateGenre(genre.Name)
+		if err != nil {
+			return 0, err
+		}
+		genreID, err := s.GRepo.GetGenreID(genre.Name)
+		if err != nil {
+			return 0, err
+		}
+		err = s.GRepo.LinkGenre(movieID, genreID)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	return movieID, nil
 }
 
 func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
-	return s.Repo.GetAllMovies()
+	return s.MRepo.GetAllMovies()
 }
 
 func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
-	movie, err := s.Repo.GetMovieByID(id)
+	movie, err := s.MRepo.GetMovieByID(id)
 	if stdErr.Is(err, sql.ErrNoRows) {
 		return models.Movie{}, appErr.ErrMovieNotFound
 	}
