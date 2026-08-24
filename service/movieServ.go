@@ -74,7 +74,27 @@ func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
 }
 
 func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
-	return s.MRepo.GetAllMovies()
+	movies, err := s.MRepo.GetAllMovies()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []models.Movie
+
+	for _, m := range movies {
+		actors, err := s.ARepo.GetByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, models.Movie{
+			ID:          m.ID,
+			Title:       m.Title,
+			ReleaseYear: m.ReleaseYear,
+			Duration:    m.Duration,
+			Actors:      actors,
+		})
+	}
+	return res, nil
 }
 
 func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {

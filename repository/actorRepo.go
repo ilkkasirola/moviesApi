@@ -41,6 +41,26 @@ func (r *ActorRepository) GetByID(id int) (models.Actor, error) {
 
 	return a, err
 }
+func (r *ActorRepository) GetByMovieID(movieID int) ([]models.Actor, error) {
+	rows, err := r.DB.Query(`SELECT a.id, a.name, a.birthDate FROM Actor a
+		INNER JOIN MovieActor ma ON a.id = ma.actorId WHERE ma.movieId = ?`, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []models.Actor
+
+	for rows.Next() {
+		var a models.Actor
+		err := rows.Scan(&a.ID, &a.Name, &a.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+		actors = append(actors, a)
+	}
+	return actors, rows.Err()
+}
 
 func (r *ActorRepository) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
 	rows, err := r.DB.Query(`
