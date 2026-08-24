@@ -47,7 +47,7 @@ func CreateTables() error {
 	CREATE TABLE IF NOT EXISTS Actor (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
-		birthDate DATE,
+		birthDate TEXT NOT NULL,
 		UNIQUE(name, birthDate)
 	);
 

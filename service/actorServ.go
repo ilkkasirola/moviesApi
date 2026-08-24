@@ -1,8 +1,10 @@
 package service
 
 import (
+	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
+	"strings"
 )
 
 type ActorService struct {
@@ -28,4 +30,16 @@ func (s *ActorService) GetActorByID(id int) (models.Actor, []models.Movie, error
 		return actor, nil, err
 	}
 	return actor, movies, nil
+}
+
+func (s *ActorService) CreateActor(a models.Actor) (int64, error) {
+	actorID, err := s.Repo.CreateActor(a.Name, a.BirthDate)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return 0, appErr.ErrActorExists
+		}
+		return 0, err
+	}
+	return actorID, nil
 }

@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type ActorHandler struct {
-	Service *service.ActorService
+	Service  *service.ActorService
+	Validate *validator.Validate
 }
 
 type ActorResponse struct {
@@ -19,8 +22,8 @@ type ActorResponse struct {
 	Movies []models.Movie `json:"movies"`
 }
 
-func NewActorHandler(s *service.ActorService) *ActorHandler {
-	return &ActorHandler{Service: s}
+func NewActorHandler(s *service.ActorService, v *validator.Validate) *ActorHandler {
+	return &ActorHandler{Service: s, Validate: v}
 }
 
 func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
@@ -51,5 +54,28 @@ func (h *ActorHandler) GetActorByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(ActorResponse{
 		Actor:  actor,
 		Movies: movies,
+	})
+}
+func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
+	var actor models.Actor
+	err := json.NewDecoder(r.Body).Decode(&actor)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+	err = h.Validate.Struct(actor)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrValidation)
+		return
+	}
+
+	genreID, err := h.Service.CreateActor(actor)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int64{
+		"id": genreID,
 	})
 }

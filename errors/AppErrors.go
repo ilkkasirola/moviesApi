@@ -16,6 +16,12 @@ func (e *AppError) Error() string {
 }
 
 var (
+	ErrValidation = &AppError{
+		Code:    "VALIDATION_ERROR",
+		Message: "invalid request data",
+		Status:  http.StatusBadRequest,
+	}
+
 	ErrMovieExists = &AppError{
 		Code:    "MOVIE_EXISTS",
 		Message: "movie already exists",
@@ -55,6 +61,12 @@ var (
 	ErrGenreExists = &AppError{
 		Code:    "GENRE_EXISTS",
 		Message: "genre already exists",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrActorExists = &AppError{
+		Code:    "ACTOR_EXISTS",
+		Message: "actor already exists",
 		Status:  http.StatusBadRequest,
 	}
 )

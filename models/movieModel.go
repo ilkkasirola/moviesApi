@@ -6,5 +6,5 @@ type Movie struct {
 	ReleaseYear int     `json:"releaseYear"`
 	Duration    int     `json:"duration"`
 	Genres      []Genre `json:"genres"`
-	Actors      []Actor `json:"actors"`
+	Actors      []Actor `json:"actors" validate:"dive"`
 }
