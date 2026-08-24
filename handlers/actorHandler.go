@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/service"
@@ -95,4 +96,46 @@ func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	idStr := parts[len(parts)-1]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+
+	var patch models.ActorPatch
+	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
+		http.Error(w, "invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	if patch.Name == nil {
+		http.Error(w, "no fields to update", http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(*patch.Name) == "" {
+		http.Error(w, "name canno be empty", http.StatusBadRequest)
+		return
+	}
+
+	actor, err := h.Service.PatchActor(r.Context(), id, *patch.Name, *patch.BirthDate)
+	if err != nil {
+		switch {
+		case errors.Is(err, appErr.ErrGenreNotFound):
+			http.Error(w, "actor not found", http.StatusNotFound)
+		case errors.Is(err, appErr.ErrGenreExists):
+			http.Error(w, "actor name already exists", http.StatusConflict)
+		default:
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(actor)
 }

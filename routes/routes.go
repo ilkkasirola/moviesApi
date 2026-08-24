@@ -16,6 +16,7 @@ func SetupRoutes(mh *handlers.MovieHandler, ah *handlers.ActorHandler, gh *handl
 	mux.HandleFunc("GET /api/actors/{id}", ah.GetActorByID)
 	mux.HandleFunc("POST /api/actors", ah.CreateActor)
 	mux.HandleFunc("DELETE /api/actors/{id}", ah.DeleteActor)
+	mux.HandleFunc("PATCH /api/actors/{id}", ah.PatchActor)
 
 	mux.HandleFunc("GET /api/genres", gh.GetAllGenres)
 	mux.HandleFunc("GET /api/genres/{id}", gh.GetGenreById)
