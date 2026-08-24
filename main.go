@@ -37,8 +37,6 @@ func main() {
 
 	mux := routes.SetupRoutes(movieHandler, actorHandler, genreHandler)
 
-	// http.HandleFunc("api/movies", handler.CreateMovie)
-
 	log.Println("server on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
