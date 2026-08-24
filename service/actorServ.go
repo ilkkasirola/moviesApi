@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
@@ -17,6 +18,10 @@ func NewActorService(r *repository.ActorRepository) *ActorService {
 
 func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 	return s.Repo.GetAll()
+}
+
+func (s *ActorService) DeleteActor(id int) error {
+	return s.Repo.DeleteActor(id)
 }
 
 func (s *ActorService) GetActorByID(id int) (models.Actor, []models.Movie, error) {
@@ -49,4 +54,9 @@ func (s *ActorService) CreateActor(a models.Actor) (int64, error) {
 		return 0, err
 	}
 	return actorID, nil
+}
+
+func (s *ActorService) PatchActor(ctx context.Context, id int, name string, birthDate string) (*models.Actor, error) {
+	name = strings.TrimSpace(name)
+	return s.Repo.PatchActor(ctx, id, name, birthDate)
 }

@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	"movies-api/errors"
 	"movies-api/models"
 )
 
@@ -104,4 +106,44 @@ func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
 		movieID, actorID,
 	)
 	return err
+}
+
+func (r *ActorRepository) DeleteActor(id int) error {
+	_, err := r.DB.Exec(`
+		DELETE FROM Actor
+		WHERE id = ?`, id,
+	)
+	return err
+}
+
+func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate string) (*models.Actor, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.ExecContext(ctx, "UPDATE Actor SET name = ? SET birthDate = ? WHERE id = ?", name, birthDate, id)
+	if err != nil {
+		return nil, err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		return nil, errors.ErrActorExists
+	}
+
+	var g models.Actor
+	row := tx.QueryRowContext(ctx, "SELECT id, name, birthDate FROM Actor WHERE id = ?", id)
+	if err := row.Scan(&g.ID, &g.Name, &g.BirthDate); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return &g, nil
 }

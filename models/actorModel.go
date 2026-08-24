@@ -5,3 +5,7 @@ type Actor struct {
 	Name      string `json:"name"`
 	BirthDate string `json:"birthDate" validate:"required,datetime=2006-01-02"`
 }
+type ActorPatch struct {
+	Name      *string `json:"name"`
+	BirthDate *string `json:"birthDate"`
+}
