@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
@@ -37,6 +38,7 @@ func (s *GenreService) CreateGenre(g models.Genre) (int64, error) {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return 0, appErr.ErrGenreExists
 		}
+		return 0, err
 	}
 
 	return genreID, nil
@@ -44,4 +46,13 @@ func (s *GenreService) CreateGenre(g models.Genre) (int64, error) {
 
 func (s *GenreService) DeleteGenre(id int) error {
 	return s.Repo.DeleteGenre(id)
+}
+
+func (s *GenreService) PatchGenre(ctx context.Context, id int, name string) (*models.Genre, error) {
+	name = strings.TrimSpace(name)
+	return s.Repo.PatchGenre(ctx, id, name)
+}
+
+func (s *GenreService) GetGenreByMovieID(id int) ([]models.Genre, error) {
+	return s.Repo.GetGenreByMovieID(id)
 }
