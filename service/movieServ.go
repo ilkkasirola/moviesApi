@@ -2,6 +2,7 @@ package service
 
 import (
 	// "errors"
+	"context"
 	"database/sql"
 	stdErr "errors"
 	appErr "movies-api/errors"
@@ -115,4 +116,8 @@ func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
 
 func (s *MovieService) DeleteMovie(id int) error {
 	return s.MRepo.DeleteMovie(id)
+}
+
+func (s *MovieService) PatchMovie(ctx context.Context, id int, title string, year, duration int) (*models.Movie, error) {
+	return s.MRepo.PatchMovie(ctx, id, title, year, duration)
 }

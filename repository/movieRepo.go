@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	aErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -59,4 +61,34 @@ func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int
 func (r *MovieRepository) DeleteMovie(id int) error {
 	_, err := r.DB.Exec(`DELETE FROM movie WHERE id = ?`, id)
 	return err
+}
+
+func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title string, year, duration int) (*models.Movie, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.ExecContext(ctx, "UPDATE Movie SET title = ? SET releaseYear = ? SET duration = ? WHERE id = ?", title, year, duration, id)
+	if err != nil {
+		return nil, err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if n == 0 {
+		return nil, aErr.ErrMovieExists
+	}
+	var m models.Movie
+	row := tx.QueryRowContext(ctx, "SELECT id, title, releaseYear, duration FROM Movie WHERE id = ?", id)
+	if err := row.Scan(&m.ID, &m.Title, &m.ReleaseYear, &m.Duration); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return &m, nil
 }
