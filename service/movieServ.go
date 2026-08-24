@@ -86,7 +86,7 @@ func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
 		if err != nil {
 			return nil, err
 		}
-		genres, err := s.GRepo.GetByMovieID(m.ID)
+		genres, err := s.GRepo.GetGenreByMovieID(m.ID)
 		if err != nil {
 			return nil, err
 		}
