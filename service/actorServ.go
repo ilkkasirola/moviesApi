@@ -31,6 +31,12 @@ func (s *ActorService) GetActorByID(id int) (models.Actor, []models.Movie, error
 	}
 	return actor, movies, nil
 }
+func (s *ActorService) GetActorsByMovieID(movieID int) ([]models.Actor, error) {
+	if movieID <= 0 {
+		return nil, appErr.ErrIvalidID
+	}
+	return s.Repo.GetByMovieID(movieID)
+}
 
 func (s *ActorService) CreateActor(a models.Actor) (int64, error) {
 	actorID, err := s.Repo.CreateActor(a.Name, a.BirthDate)

@@ -86,12 +86,17 @@ func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
 		if err != nil {
 			return nil, err
 		}
+		genres, err := s.GRepo.GetByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, models.Movie{
 			ID:          m.ID,
 			Title:       m.Title,
 			ReleaseYear: m.ReleaseYear,
 			Duration:    m.Duration,
 			Actors:      actors,
+			Genres:      genres,
 		})
 	}
 	return res, nil
