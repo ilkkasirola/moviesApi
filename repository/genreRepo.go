@@ -96,3 +96,26 @@ func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (
 	}
 	return &g, nil
 }
+
+func (r *GenreRepository) GetGenreByMovieID(movieID int) ([]models.Genre, error) {
+	rows, err := r.DB.Query(`
+		SELECT g.id, g.name FROM Genre g
+		INNER JOIN MovieGenre mg ON g.id = mg.GenreId WHERE mg.movieID = ?
+		`, movieID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []models.Genre
+
+	for rows.Next() {
+		var g models.Genre
+		err := rows.Scan(&g.ID, &g.Name)
+		if err != nil {
+			return nil, err
+		}
+		genres = append(genres, g)
+	}
+	return genres, rows.Err()
+}

@@ -52,3 +52,7 @@ func (s *GenreService) PatchGenre(ctx context.Context, id int, name string) (*mo
 	name = strings.TrimSpace(name)
 	return s.Repo.PatchGenre(ctx, id, name)
 }
+
+func (s *GenreService) GetGenreByMovieID(id int) ([]models.Genre, error) {
+	return s.Repo.GetGenreByMovieID(id)
+}
