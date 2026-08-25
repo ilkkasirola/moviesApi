@@ -28,6 +28,13 @@ func NewActorHandler(s *service.ActorService, v *validator.Validate) *ActorHandl
 }
 
 func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+
+	if name != "" {
+		h.SearchActorByName(w, r)
+		return
+	}
+
 	actors, err := h.Service.GetAllActors()
 	if err != nil {
 		appErr.WriteError(w, err)
@@ -98,6 +105,18 @@ func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *ActorHandler) SearchActorByName(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+
+	actors, err := h.Service.SearchActorByName(name)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(actors)
+}
+
 func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	idStr := parts[len(parts)-1]
@@ -110,29 +129,29 @@ func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
 
 	var patch models.ActorPatch
 	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
-		http.Error(w, "invalid JSON body", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	if patch.Name == nil {
-		http.Error(w, "no fields to update", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	if strings.TrimSpace(*patch.Name) == "" {
-		http.Error(w, "name canno be empty", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
-	actor, err := h.Service.PatchActor(r.Context(), id, *patch.Name, *patch.BirthDate)
+	actor, err := h.Service.PatchActor(r.Context(), id, *patch.Name, patch.BirthDate)
 	if err != nil {
 		switch {
-		case errors.Is(err, appErr.ErrGenreNotFound):
-			http.Error(w, "actor not found", http.StatusNotFound)
-		case errors.Is(err, appErr.ErrGenreExists):
-			http.Error(w, "actor name already exists", http.StatusConflict)
+		case errors.Is(err, appErr.ErrActorNotFound):
+			appErr.WriteError(w, appErr.ErrActorNotFound)
+		case errors.Is(err, appErr.ErrActorExists):
+			appErr.WriteError(w, appErr.ErrActorExists)
 		default:
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			appErr.WriteError(w, err)
 		}
 		return
 	}
