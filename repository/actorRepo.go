@@ -87,7 +87,7 @@ func (r *ActorRepository) GetMoviesByActorID(actorID int) ([]models.Movie, error
 }
 
 func (r *ActorRepository) CreateActor(name string, birthDate any) (int64, error) {
-	result, err := r.DB.Exec("INSERT OR IGNORE INTO Actor (name, birthDate) VALUES (?, ?)", name, birthDate)
+	result, err := r.DB.Exec("INSERT INTO Actor (name, birthDate) VALUES (?, ?)", name, birthDate)
 	if err != nil {
 		return 0, err
 	}
@@ -109,21 +109,40 @@ func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
 }
 
 func (r *ActorRepository) DeleteActor(id int) error {
-	_, err := r.DB.Exec(`
+	res, err := r.DB.Exec(`
 		DELETE FROM Actor
 		WHERE id = ?`, id,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.ErrActorNotFound
+	}
+	return nil
 }
 
-func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate string) (*models.Actor, error) {
+func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate *string) (*models.Actor, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	res, err := tx.ExecContext(ctx, "UPDATE Actor SET name = ? SET birthDate = ? WHERE id = ?", name, birthDate, id)
+	var birthDateArg any
+	if birthDate != nil {
+		birthDateArg = *birthDate
+	}
+
+	res, err := tx.ExecContext(ctx,
+		"UPDATE Actor SET name = ?, birthDate = COALESCE(?, birthDate) WHERE id = ?",
+		name, birthDateArg, id,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +152,7 @@ func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, b
 		return nil, err
 	}
 	if n == 0 {
-		return nil, errors.ErrActorExists
+		return nil, errors.ErrActorNotFound
 	}
 
 	var g models.Actor
@@ -146,4 +165,27 @@ func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, b
 		return nil, err
 	}
 	return &g, nil
+}
+
+func (r *ActorRepository) SearchActorByName(name string) ([]models.Actor, error) {
+	whatname := "%" + name + "%"
+	rows, err := r.DB.Query(`
+		SELECT id, name, birthDate FROM Actor
+		WHERE name LIKE ?`, whatname)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actors []models.Actor
+
+	for rows.Next() {
+		var a models.Actor
+		err := rows.Scan(&a.ID, &a.Name, &a.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+		actors = append(actors, a)
+	}
+	return actors, rows.Err()
 }

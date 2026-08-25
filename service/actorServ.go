@@ -56,7 +56,11 @@ func (s *ActorService) CreateActor(a models.Actor) (int64, error) {
 	return actorID, nil
 }
 
-func (s *ActorService) PatchActor(ctx context.Context, id int, name string, birthDate string) (*models.Actor, error) {
+func (s *ActorService) PatchActor(ctx context.Context, id int, name string, birthDate *string) (*models.Actor, error) {
 	name = strings.TrimSpace(name)
 	return s.Repo.PatchActor(ctx, id, name, birthDate)
+}
+
+func (s *ActorService) SearchActorByName(name string) ([]models.Actor, error) {
+	return s.Repo.SearchActorByName(name)
 }

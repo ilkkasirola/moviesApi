@@ -69,6 +69,12 @@ var (
 		Message: "actor already exists",
 		Status:  http.StatusBadRequest,
 	}
+
+	ErrActorNotFound = &AppError{
+		Code:    "ACTOR_NOT_FOUND",
+		Message: "actor not found",
+		Status:  http.StatusNotFound,
+	}
 )
 
 func WriteError(w http.ResponseWriter, err error) {

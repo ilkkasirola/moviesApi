@@ -13,4 +13,6 @@ type MoviePatch struct {
 	Title       *string `json:"title"`
 	ReleaseYear *int    `json:"releaseYear"`
 	Duration    *int    `json:"duration"`
+	GenreIDs    *[]int  `json:"genres"`
+	ActorIDs    *[]int  `json:"actors"`
 }

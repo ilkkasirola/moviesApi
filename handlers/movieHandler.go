@@ -7,7 +7,6 @@ import (
 	"movies-api/service"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -78,15 +77,12 @@ func (h *MovieHandler) GetMovieByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		appErr.WriteError(w, err)
 		return
 	}
-	err = h.Service.MRepo.DeleteMovie(id)
+	err = h.Service.DeleteMovie(id)
 	if err != nil {
 		appErr.WriteError(w, err)
 		return
@@ -95,10 +91,7 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) PatchMovie(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
@@ -106,19 +99,11 @@ func (h *MovieHandler) PatchMovie(w http.ResponseWriter, r *http.Request) {
 
 	var patch models.MoviePatch
 	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
-		http.Error(w, "invalid JSON body", http.StatusBadRequest)
-		return
-	}
-	if patch.Title == nil {
-		http.Error(w, "no fields to update", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
-	if strings.TrimSpace(*patch.Title) == "" {
-		http.Error(w, "name canno be empty", http.StatusBadRequest)
-		return
-	}
-	movie, err := h.Service.PatchMovie(r.Context(), id, *patch.Title, *patch.ReleaseYear, *patch.Duration)
+	movie, err := h.Service.PatchMovie(r.Context(), id, patch.Title, patch.ReleaseYear, patch.Duration, patch.GenreIDs, patch.ActorIDs)
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return

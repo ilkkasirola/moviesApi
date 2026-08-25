@@ -63,14 +63,22 @@ func (r *MovieRepository) DeleteMovie(id int) error {
 	return err
 }
 
-func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title string, year, duration int) (*models.Movie, error) {
+func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	res, err := tx.ExecContext(ctx, "UPDATE Movie SET title = ? SET releaseYear = ? SET duration = ? WHERE id = ?", title, year, duration, id)
+	res, err := tx.ExecContext(
+		ctx,
+		`UPDATE Movie
+		SET title = COALESCE(?, title),
+			releaseYear = COALESCE(?, releaseYear),
+			duration = COALESCE(?, duration)
+		WHERE id = ?`,
+		title, year, duration, id,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -79,10 +87,53 @@ func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title string, 
 		return nil, err
 	}
 	if n == 0 {
-		return nil, aErr.ErrMovieExists
+		return nil, aErr.ErrMovieNotFound
+	}
+	if genreIds != nil {
+		_, err = tx.ExecContext(
+			ctx, `
+			DELETE FROM MovieGenre
+			WHERE movieId = ?
+			`, id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range *genreIds {
+			_, err := tx.ExecContext(ctx, `
+				INSERT OR IGNORE INTO MovieGenre (movieID, genreID) VALUES (?, ?)`,
+				id, v,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	}
+	if actorIds != nil {
+		_, err = tx.ExecContext(
+			ctx, `
+			DELETE FROM MovieActor
+			WHERE movieId = ?
+			`, id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range *actorIds {
+			_, err := tx.ExecContext(ctx, `
+				INSERT OR IGNORE INTO MovieActor (movieID, actorID) VALUES (?, ?)`,
+				id, v,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	var m models.Movie
-	row := tx.QueryRowContext(ctx, "SELECT id, title, releaseYear, duration FROM Movie WHERE id = ?", id)
+	row := tx.QueryRowContext(ctx, `SELECT id, title, releaseYear, duration FROM Movie WHERE id = ?`, id)
 	if err := row.Scan(&m.ID, &m.Title, &m.ReleaseYear, &m.Duration); err != nil {
 		return nil, err
 	}
