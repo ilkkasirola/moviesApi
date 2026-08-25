@@ -5,14 +5,26 @@ import (
 	"net/http"
 )
 
-func SetupRoutes() *http.ServeMux {
+func SetupRoutes(mh *handlers.MovieHandler, ah *handlers.ActorHandler, gh *handlers.GenreHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /api/movies", handlers.GetAllMovies)
-	mux.HandleFunc("GET /api/movies/{id}", handlers.GetMovieById)
-	// mux.HandleFunc("GET /api/actors", GetAllActors)
+	mux.HandleFunc("GET /api/movies", mh.GetAllMovies)
+	mux.HandleFunc("GET /api/movies/{id}", mh.GetMovieByID)
+	mux.HandleFunc("POST /api/movies", mh.CreateMovie)
+	mux.HandleFunc("DELETE /api/movies/{id}", mh.DeleteMovie)
+	mux.HandleFunc("PATCH /api/movies/{id}", mh.PatchMovie)
 
-	mux.HandleFunc("POST /api/movies", handlers.CreateMovie)
+	mux.HandleFunc("GET /api/actors", ah.GetAllActors)
+	mux.HandleFunc("GET /api/actors/{id}", ah.GetActorByID)
+	mux.HandleFunc("POST /api/actors", ah.CreateActor)
+	mux.HandleFunc("DELETE /api/actors/{id}", ah.DeleteActor)
+	mux.HandleFunc("PATCH /api/actors/{id}", ah.PatchActor)
+
+	mux.HandleFunc("GET /api/genres", gh.GetAllGenres)
+	mux.HandleFunc("GET /api/genres/{id}", gh.GetGenreById)
+	mux.HandleFunc("POST /api/genres", gh.CreateGenre)
+	mux.HandleFunc("DELETE /api/genres/{id}", gh.DeleteGenre)
+	mux.HandleFunc("PATCH /api/genres/{id}", gh.PatchGenre)
 
 	return mux
 }
