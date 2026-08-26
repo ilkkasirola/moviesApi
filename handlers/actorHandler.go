@@ -99,6 +99,24 @@ func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *ActorHandler) GetActorsByMovieID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+
+	actors, err := h.Service.GetActorsByMovieID(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(actors)
+}
+
 func (h *ActorHandler) SearchActorByName(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
 
