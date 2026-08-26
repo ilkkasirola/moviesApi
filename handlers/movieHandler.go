@@ -51,6 +51,39 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
+	genreIDstr := r.URL.Query().Get("genreId")
+
+	if genreIDstr != "" {
+		genreID, err := strconv.Atoi(genreIDstr)
+		if err != nil {
+			appErr.WriteError(w, appErr.ErrIvalidID)
+			return
+		}
+		movies, err := h.Service.SearchMovieByGenreID(genreID)
+		if err != nil {
+			appErr.WriteError(w, err)
+			return
+		}
+		json.NewEncoder(w).Encode(movies)
+		return
+	}
+
+	releaseYearStr := r.URL.Query().Get("releaseYear")
+
+	if releaseYearStr != "" {
+		releaseYear, err := strconv.Atoi(releaseYearStr)
+		if err != nil {
+			appErr.WriteError(w, appErr.ErrIvalidID)
+			return
+		}
+		movies, err := h.Service.SearchMovieByReleaseYear(releaseYear)
+		if err != nil {
+			appErr.WriteError(w, err)
+			return
+		}
+		json.NewEncoder(w).Encode(movies)
+		return
+	}
 	movies, err := h.Service.GetAllMovies()
 	if err != nil {
 		appErr.WriteError(w, err)

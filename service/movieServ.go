@@ -102,6 +102,64 @@ func (s *MovieService) GetAllMovies() ([]models.Movie, error) {
 	return res, nil
 }
 
+func (s *MovieService) SearchMovieByGenreID(genreID int) ([]models.Movie, error) {
+	movies, err := s.MRepo.SearchMovieByGenreID(genreID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []models.Movie
+
+	for _, m := range movies {
+		actors, err := s.ARepo.GetByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		genres, err := s.GRepo.GetGenreByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, models.Movie{
+			ID:          m.ID,
+			Title:       m.Title,
+			ReleaseYear: m.ReleaseYear,
+			Duration:    m.Duration,
+			Actors:      actors,
+			Genres:      genres,
+		})
+	}
+	return res, nil
+}
+
+func (s *MovieService) SearchMovieByReleaseYear(releaseYear int) ([]models.Movie, error) {
+	movies, err := s.MRepo.SearchMovieByReleaseYear(releaseYear)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []models.Movie
+
+	for _, m := range movies {
+		actors, err := s.ARepo.GetByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		genres, err := s.GRepo.GetGenreByMovieID(m.ID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, models.Movie{
+			ID:          m.ID,
+			Title:       m.Title,
+			ReleaseYear: m.ReleaseYear,
+			Duration:    m.Duration,
+			Actors:      actors,
+			Genres:      genres,
+		})
+	}
+	return res, nil
+}
+
 func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
 	movie, err := s.MRepo.GetMovieByID(id)
 	if stdErr.Is(err, sql.ErrNoRows) {
