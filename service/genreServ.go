@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	stdErr "errors"
 	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
@@ -44,7 +46,26 @@ func (s *GenreService) CreateGenre(g models.Genre) (int64, error) {
 	return genreID, nil
 }
 
-func (s *GenreService) DeleteGenre(id int) error {
+func (s *GenreService) DeleteGenre(id int, force bool) error {
+	genre, err := s.Repo.GetByID(id)
+	if err != nil {
+		if stdErr.Is(err, sql.ErrNoRows) {
+			return appErr.ErrGenreNotFound
+		}
+		return err
+	}
+	count, err := s.Repo.CountLinkedMovies(id)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		if !force {
+			return appErr.NewGenreInUse(genre.Name, count)
+		}
+		if err := s.Repo.UnlinkAllMovies(id); err != nil {
+			return err
+		}
+	}
 	return s.Repo.DeleteGenre(id)
 }
 

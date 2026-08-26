@@ -76,6 +76,19 @@ func (r *GenreRepository) DeleteGenre(id int) error {
 	return err
 }
 
+func (r *GenreRepository) CountLinkedMovies(id int) (int, error) {
+	var count int
+	err := r.DB.QueryRow(
+		"SELECT COUNT(*) FROM MovieGenre WHERE genreId = ?", id,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *GenreRepository) UnlinkAllMovies(id int) error {
+	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE genreId = ?", id)
+	return err
+}
+
 func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (*models.Genre, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {

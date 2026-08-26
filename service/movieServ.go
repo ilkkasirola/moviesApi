@@ -176,7 +176,30 @@ func (s *MovieService) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
 	return s.ARepo.GetMoviesByActorID(actorID)
 }
 
-func (s *MovieService) DeleteMovie(id int) error {
+func (s *MovieService) DeleteMovie(id int, force bool) error {
+	movie, err := s.MRepo.GetMovieByID(id)
+	if err != nil {
+		if stdErr.Is(err, sql.ErrNoRows) {
+			return appErr.ErrMovieNotFound
+		}
+		return err
+	}
+	actorCount, err := s.MRepo.CountLinkedActors(id)
+	if err != nil {
+		return err
+	}
+	genreCount, err := s.MRepo.CountLinkedGenres(id)
+	if err != nil {
+		return err
+	}
+	if actorCount > 0 || genreCount > 0 {
+		if !force {
+			return appErr.NewMovieInUse(movie.Title, actorCount, genreCount)
+		}
+		if err := s.MRepo.UnlinkAllActorsAndGenres(id); err != nil {
+			return err
+		}
+	}
 	return s.MRepo.DeleteMovie(id)
 }
 

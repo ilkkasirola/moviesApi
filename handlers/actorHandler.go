@@ -91,7 +91,8 @@ func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
-	err = h.Service.DeleteActor(id)
+	force := r.URL.Query().Get("force") == "true"
+	err = h.Service.DeleteActor(id, force)
 	if err != nil {
 		appErr.WriteError(w, err)
 		return

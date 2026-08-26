@@ -107,6 +107,30 @@ func (r *MovieRepository) DeleteMovie(id int) error {
 	return err
 }
 
+func (r *MovieRepository) CountLinkedActors(id int) (int, error) {
+	var count int
+	err := r.DB.QueryRow(
+		"SELECT COUNT(*) FROM MovieActor WHERE movieId = ?", id,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *MovieRepository) CountLinkedGenres(id int) (int, error) {
+	var count int
+	err := r.DB.QueryRow(
+		"SELECT COUNT(*) FROM MovieGenre WHERE movieId = ?", id,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *MovieRepository) UnlinkAllActorsAndGenres(id int) error {
+	if _, err := r.DB.Exec("DELETE FROM MovieActor WHERE movieId = ?", id); err != nil {
+		return err
+	}
+	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE movieId = ?", id)
+	return err
+}
+
 func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {

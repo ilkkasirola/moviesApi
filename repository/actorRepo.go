@@ -127,6 +127,19 @@ func (r *ActorRepository) DeleteActor(id int) error {
 	return nil
 }
 
+func (r *ActorRepository) CountLinkedMovies(id int) (int, error) {
+	var count int
+	err := r.DB.QueryRow(
+		"SELECT COUNT(*) FROM MovieActor WHERE actorId = ?", id,
+	).Scan(&count)
+	return count, err
+}
+
+func (r *ActorRepository) UnlinkAllMovies(id int) error {
+	_, err := r.DB.Exec("DELETE FROM MovieActor WHERE actorId = ?", id)
+	return err
+}
+
 func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate *string) (*models.Actor, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
 	if err != nil {

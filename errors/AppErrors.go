@@ -2,7 +2,9 @@ package errors
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type AppError struct {
@@ -75,7 +77,46 @@ var (
 		Message: "actor not found",
 		Status:  http.StatusNotFound,
 	}
+
 )
+
+func countedAssociated(n int, noun string) string {
+	if n == 1 {
+		return fmt.Sprintf("%d associated %s", n, noun)
+	}
+	return fmt.Sprintf("%d associated %ss", n, noun)
+}
+
+func NewGenreInUse(name string, movieCount int) *AppError {
+	return &AppError{
+		Code:    "GENRE_IN_USE",
+		Message: fmt.Sprintf("Cannot delete genre '%s' because it has %s.", name, countedAssociated(movieCount, "movie")),
+		Status:  http.StatusBadRequest,
+	}
+}
+
+func NewActorInUse(name string, movieCount int) *AppError {
+	return &AppError{
+		Code:    "ACTOR_IN_USE",
+		Message: fmt.Sprintf("Cannot delete actor '%s' because it has %s.", name, countedAssociated(movieCount, "movie")),
+		Status:  http.StatusBadRequest,
+	}
+}
+
+func NewMovieInUse(title string, actorCount, genreCount int) *AppError {
+	var parts []string
+	if actorCount > 0 {
+		parts = append(parts, countedAssociated(actorCount, "actor"))
+	}
+	if genreCount > 0 {
+		parts = append(parts, countedAssociated(genreCount, "genre"))
+	}
+	return &AppError{
+		Code:    "MOVIE_IN_USE",
+		Message: fmt.Sprintf("Cannot delete movie '%s' because it has %s.", title, strings.Join(parts, " and ")),
+		Status:  http.StatusBadRequest,
+	}
+}
 
 func WriteError(w http.ResponseWriter, err error) {
 	w.Header().Set("Content-Type", "application/json")
