@@ -186,8 +186,8 @@ func (s *MovieService) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
 	return s.ARepo.GetMoviesByActorID(actorID)
 }
 
-func (s *MovieService) DeleteMovie(id int) error {
-	return s.MRepo.DeleteMovie(id)
+func (s *MovieService) DeleteMovie(id int, force bool) error {
+	return s.MRepo.DeleteMovie(id, force)
 }
 
 func (s *MovieService) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {

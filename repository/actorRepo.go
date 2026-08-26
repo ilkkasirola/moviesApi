@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -108,8 +108,27 @@ func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
 	return err
 }
 
-func (r *ActorRepository) DeleteActor(id int) error {
-	res, err := r.DB.Exec(`
+func (r *ActorRepository) DeleteActor(id int, force bool) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var linkCount int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieActor WHERE actorId = ?`, id).Scan(&linkCount); err != nil {
+		return err
+	}
+	if linkCount > 0 {
+		if !force {
+			return appErr.ErrActorInUse
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE actorId = ?`, id); err != nil {
+			return err
+		}
+	}
+
+	res, err := tx.Exec(`
 		DELETE FROM Actor
 		WHERE id = ?`, id,
 	)
@@ -122,9 +141,9 @@ func (r *ActorRepository) DeleteActor(id int) error {
 		return err
 	}
 	if n == 0 {
-		return errors.ErrActorNotFound
+		return appErr.ErrActorNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate *string) (*models.Actor, error) {
@@ -152,7 +171,7 @@ func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, b
 		return nil, err
 	}
 	if n == 0 {
-		return nil, errors.ErrActorNotFound
+		return nil, appErr.ErrActorNotFound
 	}
 
 	var g models.Actor

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	aErr "movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -102,9 +103,44 @@ func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int
 	return result.LastInsertId()
 }
 
-func (r *MovieRepository) DeleteMovie(id int) error {
-	_, err := r.DB.Exec(`DELETE FROM movie WHERE id = ?`, id)
-	return err
+func (r *MovieRepository) DeleteMovie(id int, force bool) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var linkCount int
+	if err := tx.QueryRow(`
+		SELECT
+		(SELECT COUNT(*) FROM MovieGenre WHERE movieId = ?) +
+		(SELECT COUNT(*) FROM MovieActor WHERE movieId = ?)
+		`, id, id).Scan(&linkCount); err != nil {
+		return err
+	}
+	if linkCount > 0 {
+		if !force {
+			return aErr.ErrMovieHasLinks
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieGenre WHERE movieId = ?`, id); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE movieId = ?`, id); err != nil {
+			return err
+		}
+	}
+	res, err := tx.Exec(`DELETE FROM Movie WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return appErr.ErrMovieNotFound
+	}
+	return tx.Commit()
 }
 
 func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {

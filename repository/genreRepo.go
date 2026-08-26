@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -68,12 +68,41 @@ func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
 	return err
 }
 
-func (r *GenreRepository) DeleteGenre(id int) error {
-	_, err := r.DB.Exec(`
+func (r *GenreRepository) DeleteGenre(id int, force bool) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var linkCount int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieGenre WHERE genreId = ?`, id).Scan(&linkCount); err != nil {
+		return err
+	}
+	if linkCount > 0 {
+		if !force {
+			return appErr.ErrGenreInUse
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieGenre WHERE genreId = ?`, id); err != nil {
+			return err
+		}
+	}
+
+	res, err := tx.Exec(`
 		DELETE FROM Genre
 		WHERE id = ?`, id,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return appErr.ErrGenreNotFound
+	}
+	return tx.Commit()
 }
 
 func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (*models.Genre, error) {
@@ -93,7 +122,7 @@ func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (
 		return nil, err
 	}
 	if n == 0 {
-		return nil, errors.ErrGenreNotFound
+		return nil, appErr.ErrGenreNotFound
 	}
 
 	var g models.Genre

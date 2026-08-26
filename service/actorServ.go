@@ -20,8 +20,8 @@ func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 	return s.Repo.GetAll()
 }
 
-func (s *ActorService) DeleteActor(id int) error {
-	return s.Repo.DeleteActor(id)
+func (s *ActorService) DeleteActor(id int, force bool) error {
+	return s.Repo.DeleteActor(id, force)
 }
 
 func (s *ActorService) GetActorByID(id int) (models.Actor, []models.Movie, error) {
