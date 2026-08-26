@@ -76,8 +76,38 @@ func (h *MovieHandler) GetMovieByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(movie)
 }
 
-// 	movie.ID = int(movieID)
+func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	err = h.Service.DeleteMovie(id)
+	if err != nil {
+		appErr.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
-// 	w.WriteHeader(http.StatusCreated)
-// 	json.NewEncoder(w).Encode(movie)
-// }
+func (h *MovieHandler) PatchMovie(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+
+	var patch models.MoviePatch
+	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+
+	movie, err := h.Service.PatchMovie(r.Context(), id, patch.Title, patch.ReleaseYear, patch.Duration, patch.GenreIDs, patch.ActorIDs)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(movie)
+}
