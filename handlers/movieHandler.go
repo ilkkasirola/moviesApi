@@ -51,7 +51,7 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
-	genreIDstr := r.URL.Query().Get("genreId")
+	genreIDstr := r.URL.Query().Get("genre")
 
 	if genreIDstr != "" {
 		genreID, err := strconv.Atoi(genreIDstr)
@@ -68,7 +68,7 @@ func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	releaseYearStr := r.URL.Query().Get("releaseYear")
+	releaseYearStr := r.URL.Query().Get("year")
 
 	if releaseYearStr != "" {
 		releaseYear, err := strconv.Atoi(releaseYearStr)
