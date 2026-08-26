@@ -44,10 +44,7 @@ func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) GetActorByID(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
@@ -89,10 +86,7 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) DeleteActor(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
@@ -136,10 +130,7 @@ func (h *ActorHandler) SearchActorByName(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return

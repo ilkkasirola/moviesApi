@@ -2,6 +2,7 @@ package service
 
 import (
 	// "errors"
+	"context"
 	"database/sql"
 	stdErr "errors"
 	appErr "movies-api/errors"
@@ -168,5 +169,45 @@ func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
 	if err != nil {
 		return models.Movie{}, err
 	}
+	return movie, nil
+}
+
+func (s *MovieService) DeleteMovie(id int) error {
+	return s.MRepo.DeleteMovie(id)
+}
+
+func (s *MovieService) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {
+	if genreIds != nil {
+		for _, g := range *genreIds {
+			if _, err := s.GRepo.GetByID(g); err != nil {
+				if stdErr.Is(err, sql.ErrNoRows) {
+					return nil, appErr.ErrGenreNotFound
+				}
+				return nil, err
+			}
+		}
+	}
+	if actorIds != nil {
+		for _, a := range *actorIds {
+			if _, err := s.ARepo.GetByID(a); err != nil {
+				if stdErr.Is(err, sql.ErrNoRows) {
+					return nil, appErr.ErrActorNotFound
+				}
+				return nil, err
+			}
+		}
+	}
+
+	movie, err := s.MRepo.PatchMovie(ctx, id, title, year, duration, genreIds, actorIds)
+	if err != nil {
+		return nil, err
+	}
+	genres, err := s.GRepo.GetGenreByMovieID(movie.ID)
+	if err != nil {
+		return nil, err
+	}
+	actors, err := s.ARepo.GetByMovieID(movie.ID)
+	movie.Genres = genres
+	movie.Actors = actors
 	return movie, nil
 }
