@@ -84,6 +84,23 @@ func (h *MovieHandler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(movies)
 		return
 	}
+
+	actorIDstr := r.URL.Query().Get("actor")
+
+	if actorIDstr != "" {
+		actorID, err := strconv.Atoi(actorIDstr)
+		if err != nil {
+			appErr.WriteError(w, appErr.ErrIvalidID)
+			return
+		}
+		movies, err := h.Service.GetMoviesByActorID(actorID)
+		if err != nil {
+			appErr.WriteError(w, err)
+			return
+		}
+		json.NewEncoder(w).Encode(movies)
+		return
+	}
 	movies, err := h.Service.GetAllMovies()
 	if err != nil {
 		appErr.WriteError(w, err)

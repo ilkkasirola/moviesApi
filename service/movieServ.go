@@ -172,6 +172,10 @@ func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
 	return movie, nil
 }
 
+func (s *MovieService) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
+	return s.ARepo.GetMoviesByActorID(actorID)
+}
+
 func (s *MovieService) DeleteMovie(id int) error {
 	return s.MRepo.DeleteMovie(id)
 }
