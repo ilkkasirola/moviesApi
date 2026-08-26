@@ -123,6 +123,11 @@ func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
+	err = h.Validate.Struct(patch)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrValidation)
+		return
+	}
 
 	if patch.Name == nil {
 		appErr.WriteError(w, appErr.ErrInvalidBody)

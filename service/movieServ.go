@@ -158,8 +158,11 @@ func (s *MovieService) PatchMovie(ctx context.Context, id int, title *string, ye
 	if err != nil {
 		return nil, err
 	}
-	actors, err := s.ARepo.GetByMovieID(movie.ID)
 	movie.Genres = genres
+	actors, err := s.ARepo.GetByMovieID(movie.ID)
+	if err != nil {
+		return nil, err
+	}
 	movie.Actors = actors
 	return movie, nil
 }
