@@ -33,7 +33,7 @@ func main() {
 
 	movieHandler := handlers.NewMovieHandler(movieService, validate)
 	actorHandler := handlers.NewActorHandler(actorService, validate)
-	genreHandler := handlers.NewGenreHandler(genreService)
+	genreHandler := handlers.NewGenreHandler(genreService, validate)
 
 	mux := routes.SetupRoutes(movieHandler, actorHandler, genreHandler)
 

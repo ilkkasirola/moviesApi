@@ -9,18 +9,21 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type GenreHandler struct {
-	Service *service.GenreService
+	Service  *service.GenreService
+	Validate *validator.Validate
 }
 
 type GenreResponse struct {
 	Genre models.Genre `json:"Genre"`
 }
 
-func NewGenreHandler(s *service.GenreService) *GenreHandler {
-	return &GenreHandler{Service: s}
+func NewGenreHandler(s *service.GenreService, v *validator.Validate) *GenreHandler {
+	return &GenreHandler{Service: s, Validate: v}
 }
 
 func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
