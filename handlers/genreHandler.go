@@ -92,8 +92,12 @@ func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
 		appErr.WriteError(w, appErr.ErrIvalidID)
 		return
 	}
-
 	force := r.URL.Query().Get("force") == "true"
+
+<<<<<<< HEAD
+	force := r.URL.Query().Get("force") == "true"
+=======
+>>>>>>> ecf158a79fb976f0d363a4fe765ef035b2b0a07d
 	err = h.Service.DeleteGenre(id, force)
 	if err != nil {
 		appErr.WriteError(w, err)

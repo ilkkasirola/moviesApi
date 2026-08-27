@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	aErr "movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -167,7 +167,7 @@ func (r *MovieRepository) DeleteMovie(id int, force bool) error {
 	var title string
 	if err := tx.QueryRow(`SELECT title FROM Movie WHERE id = ?`, id).Scan(&title); err != nil {
 		if err == sql.ErrNoRows {
-			return aErr.ErrMovieNotFound
+			return appErr.ErrMovieNotFound
 		}
 		return err
 	}
@@ -181,7 +181,7 @@ func (r *MovieRepository) DeleteMovie(id int, force bool) error {
 	}
 	if actorCount > 0 || genreCount > 0 {
 		if !force {
-			return aErr.NewMovieInUse(title, actorCount, genreCount)
+			return appErr.NewMovieInUse(title, actorCount, genreCount)
 		}
 		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE movieId = ?`, id); err != nil {
 			return err
@@ -244,7 +244,7 @@ func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string,
 		return nil, err
 	}
 	if n == 0 {
-		return nil, aErr.ErrMovieNotFound
+		return nil, appErr.ErrMovieNotFound
 	}
 	if genreIds != nil {
 		_, err = tx.ExecContext(

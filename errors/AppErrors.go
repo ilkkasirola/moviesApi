@@ -77,6 +77,24 @@ var (
 		Message: "actor not found",
 		Status:  http.StatusNotFound,
 	}
+
+	ErrGenreInUse = &AppError{
+		Code:    "GENRE_IN_USE",
+		Message: "genre is linked to one or more movies",
+		Status:  http.StatusConflict,
+	}
+
+	ErrActorInUse = &AppError{
+		Code:    "ACTOR_IN_USE",
+		Message: "actor is linked to one or more movies",
+		Status:  http.StatusConflict,
+	}
+
+	ErrMovieHasLinks = &AppError{
+		Code:    "MOVIE_HAS_LINKS",
+		Message: "movie has linked genres or actors",
+		Status:  http.StatusConflict,
+	}
 )
 
 func countedAssociated(n int, noun string) string {

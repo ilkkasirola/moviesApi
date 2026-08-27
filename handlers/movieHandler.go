@@ -153,6 +153,11 @@ func (h *MovieHandler) PatchMovie(w http.ResponseWriter, r *http.Request) {
 		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
+	err = h.Validate.Struct(patch)
+	if err != nil {
+		appErr.WriteError(w, appErr.ErrValidation)
+		return
+	}
 
 	movie, err := h.Service.PatchMovie(r.Context(), id, patch.Title, patch.ReleaseYear, patch.Duration, patch.GenreIDs, patch.ActorIDs)
 	if err != nil {

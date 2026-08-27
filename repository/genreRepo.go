@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -78,7 +78,7 @@ func (r *GenreRepository) DeleteGenre(id int, force bool) error {
 	var name string
 	if err := tx.QueryRow(`SELECT name FROM Genre WHERE id = ?`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
-			return errors.ErrGenreNotFound
+			return appErr.ErrGenreNotFound
 		}
 		return err
 	}
@@ -88,7 +88,7 @@ func (r *GenreRepository) DeleteGenre(id int, force bool) error {
 	}
 	if count > 0 {
 		if !force {
-			return errors.NewGenreInUse(name, count)
+			return appErr.NewGenreInUse(name, count)
 		}
 		if _, err := tx.Exec(`DELETE FROM MovieGenre WHERE genreId = ?`, id); err != nil {
 			return err
@@ -130,7 +130,7 @@ func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (
 		return nil, err
 	}
 	if n == 0 {
-		return nil, errors.ErrGenreNotFound
+		return nil, appErr.ErrGenreNotFound
 	}
 
 	var g models.Genre

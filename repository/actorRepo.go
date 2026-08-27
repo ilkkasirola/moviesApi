@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"movies-api/errors"
+	appErr "movies-api/errors"
 	"movies-api/models"
 )
 
@@ -118,7 +118,7 @@ func (r *ActorRepository) DeleteActor(id int, force bool) error {
 	var name string
 	if err := tx.QueryRow(`SELECT name FROM Actor WHERE id = ?`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
-			return errors.ErrActorNotFound
+			return appErr.ErrActorNotFound
 		}
 		return err
 	}
@@ -128,7 +128,7 @@ func (r *ActorRepository) DeleteActor(id int, force bool) error {
 	}
 	if count > 0 {
 		if !force {
-			return errors.NewActorInUse(name, count)
+			return appErr.NewActorInUse(name, count)
 		}
 		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE actorId = ?`, id); err != nil {
 			return err
@@ -165,7 +165,7 @@ func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, b
 		return nil, err
 	}
 	if n == 0 {
-		return nil, errors.ErrActorNotFound
+		return nil, appErr.ErrActorNotFound
 	}
 
 	var g models.Actor
