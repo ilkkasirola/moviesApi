@@ -6,5 +6,5 @@ type Genre struct {
 }
 
 type GenrePatch struct {
-	Name *string `json:"name" validate:"min=1`
+	Name *string `json:"name" validate:"min=1"`
 }
