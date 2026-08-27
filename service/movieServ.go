@@ -28,49 +28,13 @@ func NewMovieService(mRepo *repository.MovieRepository, aRepo *repository.ActorR
 }
 
 func (s *MovieService) CreateMovie(m models.Movie) (int64, error) {
-	movieID, err := s.MRepo.CreateMovie(
-		m.Title,
-		m.ReleaseYear,
-		m.Duration,
-	)
-
+	movieID, err := s.MRepo.CreateMovie(m)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return 0, appErr.ErrMovieExists
 		}
 		return 0, err
 	}
-
-	for _, actor := range m.Actors {
-		_, err = s.ARepo.CreateActor(actor.Name, actor.BirthDate)
-		if err != nil {
-			return 0, err
-		}
-		actorID, err := s.ARepo.GetActorID(actor.Name, actor.BirthDate)
-		if err != nil {
-			return 0, err
-		}
-		err = s.ARepo.LinkActor(movieID, actorID)
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	for _, genre := range m.Genres {
-		_, err = s.GRepo.CreateGenre(genre.Name)
-		if err != nil {
-			return 0, err
-		}
-		genreID, err := s.GRepo.GetGenreID(genre.Name)
-		if err != nil {
-			return 0, err
-		}
-		err = s.GRepo.LinkGenre(movieID, genreID)
-		if err != nil {
-			return 0, err
-		}
-	}
-
 	return movieID, nil
 }
 

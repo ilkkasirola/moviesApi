@@ -91,15 +91,70 @@ func (r *MovieRepository) GetMovieByID(id int) (models.Movie, error) {
 	return m, err
 }
 
-func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int64, error) {
-	result, err := r.DB.Exec(
+func (r *MovieRepository) CreateMovie(m models.Movie) (int64, error) {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+	res, err := tx.Exec(
 		"INSERT INTO Movie (title, releaseYear, duration) VALUES (?, ?, ?)",
-		title, year, duration,
+		m.Title, m.ReleaseYear, m.Duration,
 	)
 	if err != nil {
 		return 0, err
 	}
-	return result.LastInsertId()
+	movieID, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	for _, actor := range m.Actors {
+		if _, err := tx.Exec(
+			`INSERT OR IGNORE INTO Actor (name, birthDate) VALUES (?, ?)`,
+			actor.Name, actor.BirthDate,
+		); err != nil {
+			return 0, err
+		}
+		var actorID int64
+		if err := tx.QueryRow(
+			`SELECT id FROM Actor WHERE name = ? AND birthDate = ?`,
+			actor.Name, actor.BirthDate,
+		).Scan(&actorID); err != nil {
+			return 0, err
+		}
+		if _, err := tx.Exec(
+			`INSERT OR IGNORE INTO MovieActor (movieId, actorId) VALUES (?, ?)`,
+			movieID, actorID,
+		); err != nil {
+			return 0, err
+		}
+	}
+
+	for _, genre := range m.Genres {
+		if _, err := tx.Exec(
+			`INSERT OR IGNORE INTO Genre (name) VALUES (?)`,
+			genre.Name,
+		); err != nil {
+			return 0, err
+		}
+		var genreID int64
+		if err := tx.QueryRow(
+			`SELECT id FROM Genre WHERE name = ?`,
+			genre.Name,
+		).Scan(&genreID); err != nil {
+			return 0, err
+		}
+		if _, err := tx.Exec(
+			`INSERT OR IGNORE INTO MovieGenre (movieId, genreId) VALUES (?, ?)`,
+			movieID, genreID,
+		); err != nil {
+			return 0, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return movieID, nil
 }
 
 func (r *MovieRepository) DeleteMovie(id int, force bool) error {
@@ -149,21 +204,21 @@ func (r *MovieRepository) CountLinkedActors(id int) (int, error) {
 	return count, err
 }
 
-func (r *MovieRepository) CountLinkedGenres(id int) (int, error) {
-	var count int
-	err := r.DB.QueryRow(
-		"SELECT COUNT(*) FROM MovieGenre WHERE movieId = ?", id,
-	).Scan(&count)
-	return count, err
-}
+// func (r *MovieRepository) CountLinkedGenres(id int) (int, error) {
+// 	var count int
+// 	err := r.DB.QueryRow(
+// 		"SELECT COUNT(*) FROM MovieGenre WHERE movieId = ?", id,
+// 	).Scan(&count)
+// 	return count, err
+// }
 
-func (r *MovieRepository) UnlinkAllActorsAndGenres(id int) error {
-	if _, err := r.DB.Exec("DELETE FROM MovieActor WHERE movieId = ?", id); err != nil {
-		return err
-	}
-	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE movieId = ?", id)
-	return err
-}
+// func (r *MovieRepository) UnlinkAllActorsAndGenres(id int) error {
+// 	if _, err := r.DB.Exec("DELETE FROM MovieActor WHERE movieId = ?", id); err != nil {
+// 		return err
+// 	}
+// 	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE movieId = ?", id)
+// 	return err
+// }
 
 func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)

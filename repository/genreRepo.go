@@ -63,10 +63,10 @@ func (r *GenreRepository) GetGenreID(name string) (int, error) {
 	return id, err
 }
 
-func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
-	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieId, genreId) VALUES (?, ?)", movieID, genreID)
-	return err
-}
+// func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
+// 	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieId, genreId) VALUES (?, ?)", movieID, genreID)
+// 	return err
+// }
 
 func (r *GenreRepository) DeleteGenre(id int, force bool) error {
 	tx, err := r.DB.Begin()
@@ -100,18 +100,18 @@ func (r *GenreRepository) DeleteGenre(id int, force bool) error {
 	return tx.Commit()
 }
 
-func (r *GenreRepository) CountLinkedMovies(id int) (int, error) {
-	var count int
-	err := r.DB.QueryRow(
-		"SELECT COUNT(*) FROM MovieGenre WHERE genreId = ?", id,
-	).Scan(&count)
-	return count, err
-}
+// func (r *GenreRepository) CountLinkedMovies(id int) (int, error) {
+// 	var count int
+// 	err := r.DB.QueryRow(
+// 		"SELECT COUNT(*) FROM MovieGenre WHERE genreId = ?", id,
+// 	).Scan(&count)
+// 	return count, err
+// }
 
-func (r *GenreRepository) UnlinkAllMovies(id int) error {
-	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE genreId = ?", id)
-	return err
-}
+// func (r *GenreRepository) UnlinkAllMovies(id int) error {
+// 	_, err := r.DB.Exec("DELETE FROM MovieGenre WHERE genreId = ?", id)
+// 	return err
+// }
 
 func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (*models.Genre, error) {
 	tx, err := r.DB.BeginTx(ctx, nil)
