@@ -166,5 +166,8 @@ func (h *ActorHandler) PatchActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actor)
+	if err := json.NewEncoder(w).Encode(actor); err != nil {
+		appErr.WriteError(w, appErr.ErrInvalidBody)
+		return
+	}
 }

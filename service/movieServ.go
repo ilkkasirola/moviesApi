@@ -169,6 +169,16 @@ func (s *MovieService) GetMovieByID(id int) (models.Movie, error) {
 	if err != nil {
 		return models.Movie{}, err
 	}
+	genres, err := s.GRepo.GetGenreByMovieID(movie.ID)
+	if err != nil {
+		return models.Movie{}, err
+	}
+	movie.Genres = genres
+	actors, err := s.ARepo.GetByMovieID(movie.ID)
+	if err != nil {
+		return models.Movie{}, err
+	}
+	movie.Actors = actors
 	return movie, nil
 }
 

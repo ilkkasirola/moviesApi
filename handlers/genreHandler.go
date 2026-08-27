@@ -14,16 +14,16 @@ import (
 )
 
 type GenreHandler struct {
-	Service   *service.GenreService
-	Validator *validator.Validate
+	Service  *service.GenreService
+	Validate *validator.Validate
 }
 
 type GenreResponse struct {
 	Genre models.Genre `json:"Genre"`
 }
 
-func NewGenreHandler(s *service.GenreService) *GenreHandler {
-	return &GenreHandler{Service: s}
+func NewGenreHandler(s *service.GenreService, v *validator.Validate) *GenreHandler {
+	return &GenreHandler{Service: s, Validate: v}
 }
 
 func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
@@ -111,17 +111,17 @@ func (h *GenreHandler) PatchGenre(w http.ResponseWriter, r *http.Request) {
 
 	var patch models.GenrePatch
 	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
-		http.Error(w, "invalid JSON body", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	if patch.Name == nil {
-		http.Error(w, "no fields to update", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
 	if strings.TrimSpace(*patch.Name) == "" {
-		http.Error(w, "name canno be empty", http.StatusBadRequest)
+		appErr.WriteError(w, appErr.ErrInvalidBody)
 		return
 	}
 
@@ -129,11 +129,11 @@ func (h *GenreHandler) PatchGenre(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, appErr.ErrGenreNotFound):
-			http.Error(w, "genre not found", http.StatusNotFound)
+			appErr.WriteError(w, appErr.ErrGenreNotFound)
 		case errors.Is(err, appErr.ErrGenreExists):
-			http.Error(w, "genre name already exists", http.StatusConflict)
+			appErr.WriteError(w, appErr.ErrGenreExists)
 		default:
-			http.Error(w, "internal error", http.StatusInternalServerError)
+			appErr.WriteError(w, err)
 		}
 		return
 	}

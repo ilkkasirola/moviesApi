@@ -45,7 +45,7 @@ var (
 	ErrIvalidID = &AppError{
 		Code:    "INVALID_ID",
 		Message: "movie id must be a positive integer",
-		Status:  http.StatusNotFound,
+		Status:  http.StatusBadRequest,
 	}
 
 	ErrMovieNotFound = &AppError{
