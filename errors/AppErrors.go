@@ -95,9 +95,13 @@ func NewGenreInUse(name string, movieCount int) *AppError {
 }
 
 func NewActorInUse(name string, movieCount int) *AppError {
+	noun := "movies"
+	if movieCount == 1 {
+		noun = "movie"
+	}
 	return &AppError{
 		Code:    "ACTOR_IN_USE",
-		Message: fmt.Sprintf("Unable to delete actor '%s' as they are accosiated with %s movies", name, countedAssociated(movieCount, "movie")),
+		Message: fmt.Sprintf("Unable to delete actor '%s' as they are associated with %d %s", name, movieCount, noun),
 		Status:  http.StatusBadRequest,
 	}
 }

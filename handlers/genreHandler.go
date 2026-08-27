@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type GenreHandler struct {
-	Service *service.GenreService
+	Service   *service.GenreService
+	Validator *validator.Validate
 }
 
 type GenreResponse struct {
@@ -33,12 +36,9 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) GetGenreById(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		appErr.WriteError(w, appErr.ErrInvalidBody)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
+		appErr.WriteError(w, appErr.ErrIvalidID)
 		return
 	}
 
@@ -52,12 +52,9 @@ func (h *GenreHandler) GetGenreById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) GetGenreByMovieId(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		appErr.WriteError(w, appErr.ErrInvalidBody)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
+		appErr.WriteError(w, appErr.ErrIvalidID)
 		return
 	}
 
@@ -90,14 +87,12 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		appErr.WriteError(w, appErr.ErrInvalidBody)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
+		appErr.WriteError(w, appErr.ErrIvalidID)
 		return
 	}
+
 	force := r.URL.Query().Get("force") == "true"
 	err = h.Service.DeleteGenre(id, force)
 	if err != nil {
@@ -108,12 +103,9 @@ func (h *GenreHandler) DeleteGenre(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) PatchGenre(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	idStr := parts[len(parts)-1]
-
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		appErr.WriteError(w, appErr.ErrInvalidBody)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
+		appErr.WriteError(w, appErr.ErrIvalidID)
 		return
 	}
 
