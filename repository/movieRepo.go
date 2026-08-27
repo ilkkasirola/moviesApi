@@ -40,8 +40,8 @@ func (r *MovieRepository) GetAllMovies() ([]models.Movie, error) {
 func (r *MovieRepository) SearchMovieByGenreID(genreID int) ([]models.Movie, error) {
 	rows, err := r.DB.Query(`
 		SELECT m.id, m.title, m.releaseYear, m.duration FROM Movie m
-		INNER JOIN MovieGenre mg ON m.id = mg.movieID
-		WHERE mg.genreID = ?`, genreID)
+		INNER JOIN MovieGenre mg ON m.id = mg.movieId
+		WHERE mg.genreId = ?`, genreID)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +102,43 @@ func (r *MovieRepository) CreateMovie(title string, year int, duration int) (int
 	return result.LastInsertId()
 }
 
-func (r *MovieRepository) DeleteMovie(id int) error {
-	_, err := r.DB.Exec(`DELETE FROM movie WHERE id = ?`, id)
-	return err
+func (r *MovieRepository) DeleteMovie(id int, force bool) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var title string
+	if err := tx.QueryRow(`SELECT title FROM Movie WHERE id = ?`, id).Scan(&title); err != nil {
+		if err == sql.ErrNoRows {
+			return aErr.ErrMovieNotFound
+		}
+		return err
+	}
+
+	var actorCount, genreCount int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieActor WHERE movieId = ?`, id).Scan(&actorCount); err != nil {
+		return err
+	}
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieGenre WHERE movieId = ?`, id).Scan(&genreCount); err != nil {
+		return err
+	}
+	if actorCount > 0 || genreCount > 0 {
+		if !force {
+			return aErr.NewMovieInUse(title, actorCount, genreCount)
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE movieId = ?`, id); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieGenre WHERE movieId = ?`, id); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.Exec(`DELETE FROM Movie WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *MovieRepository) CountLinkedActors(id int) (int, error) {
@@ -170,7 +204,7 @@ func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string,
 
 		for _, v := range *genreIds {
 			_, err := tx.ExecContext(ctx, `
-				INSERT OR IGNORE INTO MovieGenre (movieID, genreID) VALUES (?, ?)`,
+				INSERT OR IGNORE INTO MovieGenre (movieId, genreId) VALUES (?, ?)`,
 				id, v,
 			)
 			if err != nil {
@@ -192,7 +226,7 @@ func (r *MovieRepository) PatchMovie(ctx context.Context, id int, title *string,
 
 		for _, v := range *actorIds {
 			_, err := tx.ExecContext(ctx, `
-				INSERT OR IGNORE INTO MovieActor (movieID, actorID) VALUES (?, ?)`,
+				INSERT OR IGNORE INTO MovieActor (movieId, actorId) VALUES (?, ?)`,
 				id, v,
 			)
 			if err != nil {

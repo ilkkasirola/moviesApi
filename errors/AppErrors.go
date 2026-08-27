@@ -77,7 +77,6 @@ var (
 		Message: "actor not found",
 		Status:  http.StatusNotFound,
 	}
-
 )
 
 func countedAssociated(n int, noun string) string {
@@ -90,7 +89,7 @@ func countedAssociated(n int, noun string) string {
 func NewGenreInUse(name string, movieCount int) *AppError {
 	return &AppError{
 		Code:    "GENRE_IN_USE",
-		Message: fmt.Sprintf("Cannot delete genre '%s' because it has %s.", name, countedAssociated(movieCount, "movie")),
+		Message: fmt.Sprintf("Cannot delete genre '%s' because it has %s", name, countedAssociated(movieCount, "movie")),
 		Status:  http.StatusBadRequest,
 	}
 }
@@ -98,7 +97,7 @@ func NewGenreInUse(name string, movieCount int) *AppError {
 func NewActorInUse(name string, movieCount int) *AppError {
 	return &AppError{
 		Code:    "ACTOR_IN_USE",
-		Message: fmt.Sprintf("Cannot delete actor '%s' because it has %s.", name, countedAssociated(movieCount, "movie")),
+		Message: fmt.Sprintf("Unable to delete actor '%s' as they are accosiated with %s movies", name, countedAssociated(movieCount, "movie")),
 		Status:  http.StatusBadRequest,
 	}
 }

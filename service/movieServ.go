@@ -177,30 +177,7 @@ func (s *MovieService) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
 }
 
 func (s *MovieService) DeleteMovie(id int, force bool) error {
-	movie, err := s.MRepo.GetMovieByID(id)
-	if err != nil {
-		if stdErr.Is(err, sql.ErrNoRows) {
-			return appErr.ErrMovieNotFound
-		}
-		return err
-	}
-	actorCount, err := s.MRepo.CountLinkedActors(id)
-	if err != nil {
-		return err
-	}
-	genreCount, err := s.MRepo.CountLinkedGenres(id)
-	if err != nil {
-		return err
-	}
-	if actorCount > 0 || genreCount > 0 {
-		if !force {
-			return appErr.NewMovieInUse(movie.Title, actorCount, genreCount)
-		}
-		if err := s.MRepo.UnlinkAllActorsAndGenres(id); err != nil {
-			return err
-		}
-	}
-	return s.MRepo.DeleteMovie(id)
+	return s.MRepo.DeleteMovie(id, force)
 }
 
 func (s *MovieService) PatchMovie(ctx context.Context, id int, title *string, year, duration *int, genreIds, actorIds *[]int) (*models.Movie, error) {
@@ -233,8 +210,12 @@ func (s *MovieService) PatchMovie(ctx context.Context, id int, title *string, ye
 	if err != nil {
 		return nil, err
 	}
-	actors, err := s.ARepo.GetByMovieID(movie.ID)
 	movie.Genres = genres
+
+	actors, err := s.ARepo.GetByMovieID(movie.ID)
+	if err != nil {
+		return nil, err
+	}
 	movie.Actors = actors
 	return movie, nil
 }

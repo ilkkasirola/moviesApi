@@ -74,14 +74,14 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	genreID, err := h.Service.CreateActor(actor)
+	actorID, err := h.Service.CreateActor(actor)
 	if err != nil {
 		appErr.WriteError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]int64{
-		"id": genreID,
+		"id": actorID,
 	})
 }
 

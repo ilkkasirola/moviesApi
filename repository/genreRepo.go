@@ -64,16 +64,40 @@ func (r *GenreRepository) GetGenreID(name string) (int, error) {
 }
 
 func (r *GenreRepository) LinkGenre(movieID int64, genreID int) error {
-	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieID, genreID) VALUES (?, ?)", movieID, genreID)
+	_, err := r.DB.Exec("INSERT OR IGNORE INTO MovieGenre (movieId, genreId) VALUES (?, ?)", movieID, genreID)
 	return err
 }
 
-func (r *GenreRepository) DeleteGenre(id int) error {
-	_, err := r.DB.Exec(`
-		DELETE FROM Genre
-		WHERE id = ?`, id,
-	)
-	return err
+func (r *GenreRepository) DeleteGenre(id int, force bool) error {
+	tx, err := r.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var name string
+	if err := tx.QueryRow(`SELECT name FROM Genre WHERE id = ?`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrGenreNotFound
+		}
+		return err
+	}
+	var count int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieGenre WHERE genreId = ?`, id).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		if !force {
+			return errors.NewGenreInUse(name, count)
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieGenre WHERE genreId = ?`, id); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.Exec(`DELETE FROM Genre WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *GenreRepository) CountLinkedMovies(id int) (int, error) {
@@ -124,7 +148,7 @@ func (r *GenreRepository) PatchGenre(ctx context.Context, id int, name string) (
 func (r *GenreRepository) GetGenreByMovieID(movieID int) ([]models.Genre, error) {
 	rows, err := r.DB.Query(`
 		SELECT g.id, g.name FROM Genre g
-		INNER JOIN MovieGenre mg ON g.id = mg.GenreId WHERE mg.movieID = ?
+		INNER JOIN MovieGenre mg ON g.id = mg.GenreId WHERE mg.movieId = ?
 		`, movieID)
 	if err != nil {
 		return nil, err

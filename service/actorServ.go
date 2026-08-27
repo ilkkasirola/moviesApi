@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	stdErr "errors"
 	appErr "movies-api/errors"
 	"movies-api/models"
 	"movies-api/repository"
@@ -23,26 +21,7 @@ func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 }
 
 func (s *ActorService) DeleteActor(id int, force bool) error {
-	actor, err := s.Repo.GetByID(id)
-	if err != nil {
-		if stdErr.Is(err, sql.ErrNoRows) {
-			return appErr.ErrActorNotFound
-		}
-		return err
-	}
-	count, err := s.Repo.CountLinkedMovies(id)
-	if err != nil {
-		return err
-	}
-	if count > 0 {
-		if !force {
-			return appErr.NewActorInUse(actor.Name, count)
-		}
-		if err := s.Repo.UnlinkAllMovies(id); err != nil {
-			return err
-		}
-	}
-	return s.Repo.DeleteActor(id)
+	return s.Repo.DeleteActor(id, force)
 }
 
 func (s *ActorService) GetActorByID(id int) (models.Actor, []models.Movie, error) {

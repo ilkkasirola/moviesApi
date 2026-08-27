@@ -67,7 +67,7 @@ func (r *ActorRepository) GetByMovieID(movieID int) ([]models.Actor, error) {
 func (r *ActorRepository) GetMoviesByActorID(actorID int) ([]models.Movie, error) {
 	rows, err := r.DB.Query(`
 		SELECT m.id, m.title, m.releaseYear, m.duration FROM Movie m
-		INNER JOIN MovieActor ma ON m.id = ma.movieID WHERE ma.actorId = ?`, actorID)
+		INNER JOIN MovieActor ma ON m.id = ma.movieId WHERE ma.actorId = ?`, actorID)
 	if err != nil {
 		return nil, err
 	}
@@ -102,42 +102,42 @@ func (r *ActorRepository) GetActorID(name string, birthDate any) (int, error) {
 
 func (r *ActorRepository) LinkActor(movieID int64, actorID int) error {
 	_, err := r.DB.Exec(
-		"INSERT OR IGNORE INTO MovieActor (movieID, ActorID) VALUES (?, ?)",
+		"INSERT OR IGNORE INTO MovieActor (movieId, ActorId) VALUES (?, ?)",
 		movieID, actorID,
 	)
 	return err
 }
 
-func (r *ActorRepository) DeleteActor(id int) error {
-	res, err := r.DB.Exec(`
-		DELETE FROM Actor
-		WHERE id = ?`, id,
-	)
+func (r *ActorRepository) DeleteActor(id int, force bool) error {
+	tx, err := r.DB.Begin()
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
-	n, err := res.RowsAffected()
-	if err != nil {
+	var name string
+	if err := tx.QueryRow(`SELECT name FROM Actor WHERE id = ?`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrActorNotFound
+		}
 		return err
 	}
-	if n == 0 {
-		return errors.ErrActorNotFound
-	}
-	return nil
-}
-
-func (r *ActorRepository) CountLinkedMovies(id int) (int, error) {
 	var count int
-	err := r.DB.QueryRow(
-		"SELECT COUNT(*) FROM MovieActor WHERE actorId = ?", id,
-	).Scan(&count)
-	return count, err
-}
-
-func (r *ActorRepository) UnlinkAllMovies(id int) error {
-	_, err := r.DB.Exec("DELETE FROM MovieActor WHERE actorId = ?", id)
-	return err
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM MovieActor WHERE actorId = ?`, id).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		if !force {
+			return errors.NewActorInUse(name, count)
+		}
+		if _, err := tx.Exec(`DELETE FROM MovieActor WHERE actorId = ?`, id); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.Exec(`DELETE FROM Actor WHERE id = ?`, id); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *ActorRepository) PatchActor(ctx context.Context, id int, name string, birthDate *string) (*models.Actor, error) {
